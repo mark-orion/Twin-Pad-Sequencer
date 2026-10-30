@@ -8,7 +8,7 @@ You use this app at your own risk. The creator of this app, Mark Dammer takes no
 
 ## Quick start
 
-1. Open `twin-pad-sequencer.html` directly in a browser **(best Chromium based like Chrome, Edge or Chromium)** (from disk or from `localhost`). The browser needs Web MIDI and SysEx support. On iOS this requires the MIDIweb app.
+1. Open [twin-pad-sequencer.html](https://mark-orion.github.io/Twin-Pad-Sequencer/twin-pad-sequencer-01.html) directly in a browser **(best Chromium based like Chrome, Edge or Chromium)** (from the web, disk or from `localhost`). The browser needs Web MIDI and SysEx support. On iOS this requires the MIDIweb app.
 2. Click **Connect MIDI** and allow MIDI access, including SysEx.
 3. Open **MIDI devices** and choose the Launchpad **MIDI** port (not the **DAW** port) for Pad A, and for Pad B if you have a second pad. Choose the matching Launchpad model and a **Sound output** that goes to your synthesizer or DAW.
 4. Press **Play** and start entering notes.
