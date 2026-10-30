@@ -2,6 +2,10 @@
 
 This step sequencer runs in your web browser and is played with one or two Novation Launchpads. It sends MIDI notes to a synthesizer or DAW. It is a single self-contained HTML file with vanilla JavaScript, no build step and no dependencies. It also works with mouse or touch only, with no Launchpad at all.
 
+## Disclaimer
+This app was created with AI assistance. The code is modified and edited manually as well. This app does not contain any trackers or malware and can run completely offline without any interaction with the internet. After asking for permission from the user, the software is able to interact with MIDI devices connected to or MIDI software running on the host system.
+You use this app at your own risk. The creator of this app, Mark Dammer takes no liability for any damage to person, animal, property, hardware or software caused by the use of this software.
+
 ## Quick start
 
 1. Open `twin-pad-sequencer.html` directly in a browser **(best Chromium based like Chrome, Edge or Chromium)** (from disk or from `localhost`). The browser needs Web MIDI and SysEx support. On iOS this requires the MIDIweb app.
