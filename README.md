@@ -60,7 +60,7 @@ On first connect the app tries to pick the ports for you: the first Launchpad fo
 The full manual covers getting started, every button and mode, and a reference section (defaults, hardware buttons, scales, drum map, LED colours, protocols and the session file format):
 
 - [Manual (Markdown)](manual.md) Manual in markdown format.
-- [Manual (HTML)](index.html) The full manual in HTML format is included in the homepage file.
+- [Online Manual (HTML)](mark-orion.github.io/Twin-Pad-Sequencer/index.html) The full manual in HTML format is included in the homepage file.
 
 ## Files
 
