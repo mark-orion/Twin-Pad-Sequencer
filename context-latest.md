@@ -1,6 +1,6 @@
 # Twin Pad Sequencer: current context
 
-Supersedes all earlier context files. Current as of the Pad A right column rearrangement and the Jump function (2026-10-30), after the per-track instrument output and tempo divider.
+Supersedes all earlier context files. Current as of the v05 session (2026-11-01): 8 patterns per track, the Key mode keyboard/drum pad layout toggle, per-lane velocity/gate/probability, and the split Save buttons (All, MIDI, Ptn) with partial Load. Earlier work: Pad A right column rearrangement and Jump (2026-10-30), per-track instrument output and tempo divider.
 
 Current deliverables from the latest change: `twin-pad-sequencer.html` (updated app) and the manual section of `index.html`. Keep the manual in sync with the app. Earlier versions are kept as numbered files.
 
@@ -44,7 +44,7 @@ Colours are the same on every model. Index 99 is the logo (dim red for Pad A, di
 
 **Pad A top row:** Play/Stop, Mute mode, Length −, Length +, Octave −, Octave +, Swap, Extend note. Oct−/Oct+ arm a target octave change; then press a note pad, a Pad B lane button, or T1–T4.
 
-**Pad B top row:** Tempo −5, Tempo +5, Scale previous, Scale next, Root − (♭ on Chromatic), Root + (♯ on Chromatic), Swap, Extend note.
+**Pad B top row:** Tempo −5, Tempo +5, Scale previous, Scale next (after Mode: pattern view, labelled Pat), Root − (♭ on Chromatic), Root + (♯ on Chromatic), Swap, Extend note.
 
 **Pad A right column, top to bottom:** T1, T2, T3, T4, **Prob**, **Gate**, **Vel**, **Mode** (stepping modes; the bottom button; it was called "Step" earlier). Prob, Gate and Vel moved up one place when Mode moved to the bottom.
 
@@ -74,7 +74,7 @@ Colours are the same on every model. Index 99 is the logo (dim red for Pad A, di
 - **Gate length:** with `dd = d*div` (the track's step length), a single-step note-off is at `min(dd*gate, dd−1)`. A held note's note-off is at `dd*(L−0.1)`.
 
 ## UI as it stands
-- **Top bar (sticky):** BPM, an **External clock** toggle, Length, **Save**, **Load**.
+- **Top bar (sticky):** BPM, an **External clock** toggle, Length, **Save All**, **Save MIDI**, **Save Ptn**, **Load**.
 - **Settings row:** Scale (spare width), Root, Octave, **Tempo ÷** (`#dv`, 1–16), **Instrument output (track)** (`#to`, spare width), Channel, **CLR**, **RND**. Octave, Tempo ÷ and Channel are 56 px wide.
 - **MIDI devices (collapsible, closed on small screens):** two rows of four. Row 1: Pad A input, output, model, Clock input. Row 2: Pad B input, output, model. There is no global instrument output any more. It uses 2 columns below 900 px and 1 column below 480 px.
 - **Pad edges:** each pad shows its top row, logo cell and right column, mirroring the Launchpad LEDs through `topCol` and `rightCol`, and clickable through `ctrl()`. They appear around the note grid and the three slider views.
@@ -83,9 +83,9 @@ Colours are the same on every model. Index 99 is the logo (dim red for Pad A, di
 
 ## Persistence
 - **Autosave:** localStorage key `twin-pad-sequencer-v1`, debounced 250 ms. It reconnects MIDI on load if you were connected.
-- **File:** Save/Load JSON as `twin-pad-session.json`.
+- **File:** three save buttons and one Load (see Save and load). `twin-pad-session.json` files from older versions still load.
 - **Compatibility:** older data loads with defaults (missing `prob` becomes 100, missing `acc` becomes 0, unknown models become `mk3`).
-- **Not saved:** play state, modes and views, master mute.
+- **Not saved:** play state, modes and views (including pattern view, copy arming, lane views `S.vl`), cued patterns (`cue`), master mute.
 
 ## Code map (inside the one `<script>`)
 - **MIDI and models:** `MODELS`, `padInit`, `padExit`, `padSend`, `origAddr`, `parseIn`, `attach`, `fill`, `connect`.
@@ -128,3 +128,36 @@ Colours are the same on every model. Index 99 is the logo (dim red for Pad A, di
 - **Edits:** changes are applied with Python scripts that replace exact unique strings and assert that each matched once, so a script stops at the first anchor that does not match and writes nothing. When that happens, `grep` for the real text.
 - **Checks:** run `new Function()` on the extracted script for syntax. jsdom is in `/tmp/t`.
 - **jsdom tests:** end them with `w.close();process.exit(0)`, or the process hangs on the page's timers.
+
+
+## Session changes (v05, 2026-11-01)
+Workflow as before: edits by Python scripts with unique-anchor asserts, then a `new Function()` syntax check on the extracted script. **All of the following is syntax checked only, nothing tested in a browser or on hardware.** Files delivered: `twin-pad-sequencer.html` and `index.html` (manual, now titled v05 with release notes).
+
+### Patterns (8 per track)
+- **Data:** each track has `pats[8]` (null = never stored), `pi` (active index, default 0) and `cue` (-1 or index, runtime). The active pattern lives in the normal track fields; inactive ones are snapshots. Helpers (before the Persistence section): `PA` (typed-array fields: g, ln, acc, no, lm, loct, sm, lo, hi, vel, gate, prob, ldir and the per-lane arrays `LK`), `PS` (scalars: dir, scale, oct, div, jmp, rs), `snap`, `patLoad` (copies in place, so array identities and `pos`/`holds` keep working), `blank` (empty pattern; keeps the track's scale, oct, div, rs), `pser`/`pdes` (JSON), `patHas`, `patCol`, `patSwitch`, `patPress`, `patEnter`. **Not part of a pattern:** MIDI output (`so`, `port`), channel, mute, Key mode (`km`, `kv`, `kd`).
+- **Pattern view (`S.pm`, not persisted):** Mode, then Pad B top row 3 or 4 (`ctrl0` → `patEnter`; buttons labelled Pat, cyan when active). Pad A grid rows 8..5 are tracks 1..4 and the columns are patterns 1..8; row 4 switches all four tracks. Pad B grid is dark. `pressPad` handles it before Key mode and Tempo divider mode. T1–T4 and Play stay active; Mode leaves; any other button leaves and then does its normal job (`ctrl0` header block); `cmBtn` and `apply` also clear it. `ctrl` lets everything through to `ctrl0` while `S.pm` (Key mode included).
+- **Cue:** a pattern press sets `t.cue`; pressing it again, or pressing while stopped, calls `patSwitch` at once; pressing the active pattern cancels the cue. The switch is made in `sched` when the track's own tick counter `tc[ti]` is a multiple of `S.len` (so it follows Tempo ÷ and works for every stepping mode). `tc` is reset in `play` (not on Continue). After the switch `setTimeout(render,0)` refreshes the UI and `holds` of the track are cleared.
+- **Copy:** in pattern view Vel (labelled Copy, `S.pcp`) then a pattern button copies the active pattern of that track (bottom row: of every track) into that slot. One-shot.
+- **LEDs:** bright track colour = active, dim = has notes, flashing (white / dim, `BL` toggled by a 350 ms interval) = cued, bottom row white when all tracks share the pattern. The same colours are drawn on screen with the pattern number as cell text.
+
+### Key mode: keyboard / drum pad layout
+- Inside Key mode (not in the Mode selection) **Vel** (Pad A right column 7th) toggles `t.kd` (per track, saved, not in patterns); the label shows the target (**Drum** or **Keys**), bright orange on the drum layout. `kDr(t)=(scale==='Drums')!==!!t.kd`; it is part of the `sg()` signature (keys are released on a change). Mode, then Vel still leaves Key mode.
+- **Mapping:** the drum pad layout (8 pads of 4x2 cells, lowest bottom left) plays General MIDI drum notes only on the Drums scale. On every other scale the pads play the scale notes from the root (the sequencer lanes' pitches at the track octave; C D E F G A B C on Chromatic). Pad B repeat and Pad A hold work the same. On the Drums scale with `kd` the layout is the piano (Chromatic layout: root from `eff(t)`). Per-lane octave offsets are not applied to the pads.
+
+### Per-lane velocity, gate and probability
+- **Data per track:** `lvel[128]`, `lgate[128]`, `lprob[128]` (index lane*16+step) and the flags `fvel[8]`, `fgate[8]`, `fprob[8]` (lane uses its own values). They are part of patterns (`LK`) and saved.
+- **Access:** `vget(kind,s)`, `vset`, `vall` (all act on `S.vl`, the lane of the open view, or on the track when null), `vlane()`, and `lv(t,kind,r,s)` for playback. The first edit of a lane copies the track's 16 values into it and sets its flag.
+- **Entering:** press a Pad B lane button (arms the loop edit), then Vel, Gate or Prob: `vlane()` reads `S.arm.r`; the status line names the lane. Switching directly between views keeps the lane. Closing the view clears `S.vl`.
+- **In a lane view:** the pad columns, on-screen sliders and the master slider (Pad B right column, grey bar) edit that lane only. In the track view (`S.vl` null) the master slider and the Pad B buttons (`vall`) set the track values and clear the flags of all lanes for that kind. Step edits in the track view leave lanes with a flag alone.
+- **Playback:** `sched` uses `lv` for velocity and gate. Probability: `ok(s,r)` rolls once per step shared by lanes without override, and once per lane and step for lanes with `fprob`.
+
+### Save and load
+- **Buttons:** `#saveall` (`twin-pad-all.json`), `#savemidi` (`twin-pad-midi.json`), `#saveptn` (`twin-pad-patterns.json`), one `#load`. `ser(part)` with part `'all'` (default, used by autosave), `'midi'` or `'ptn'`; `dl(part,name)` downloads.
+- **MIDI group:** `conn`, `sync`, `models`, `devs`, and per track `ch` and `so`. **Pattern group:** `bpm`, `root`, `sel`, `swap`, `len`, and per track everything else (including `mute`, `km`, `kv`, `kd`, `pi`, `pats`, the lane arrays).
+- **Load (`apply`):** only the fields present are applied; per track `ch`/`so` independently, the rest only when `t.g` is an array. Old files with a global `devs.so` still give tracks without `so` that output. `applyDevs()` runs after a load.
+
+## Open points added by this session
+- Everything above is untested beyond syntax: pattern cue timing (switch happens up to the 120 ms lookahead ahead of the display), pattern view on hardware, the Key mode layout toggle and drum-pad mapping, per-lane value views, partial load round trips (all/MIDI/patterns, old session files).
+- Per-lane probability rolls separately per lane and step only for overridden lanes.
+- A lane view has no marker on the hardware beyond the grey master bar and the status line.
+- Pattern view uses the Mode/Scale combination; the Scale buttons keep their normal job otherwise.

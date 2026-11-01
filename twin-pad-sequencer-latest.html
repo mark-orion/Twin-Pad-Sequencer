@@ -118,7 +118,7 @@ details p{margin:6px 0;color:var(--dim)}
  <label>BPM <input id="bpm" type="number" inputmode="numeric" min="30" max="300" value="120"></label>
  <button id="sync" aria-pressed="false" title="Follow incoming MIDI clock">External clock</button>
  <label>Length <input id="len" type="number" inputmode="numeric" min="1" max="16" value="16"></label>
- <button id="save" title="Save file" aria-label="Save file">Save</button><button id="load" title="Load file" aria-label="Load file">Load</button><input id="file" type="file" accept=".json,application/json" hidden>
+ <button id="saveall" title="Save MIDI settings and patterns (twin-pad-all.json)">Save All</button><button id="savemidi" title="Save MIDI settings only (twin-pad-midi.json)">Save MIDI</button><button id="saveptn" title="Save patterns only (twin-pad-patterns.json)">Save Ptn</button><button id="load" title="Load a file; only the settings found in it are loaded" aria-label="Load file">Load</button><input id="file" type="file" accept=".json,application/json" hidden>
 </div>
 
 <div class="set">
@@ -175,8 +175,8 @@ const isRoot=(t,r)=>t.scale!=='Drums'&&SCALES[t.scale][r%SCALES[t.scale].length]
 const SN=Object.keys(SCALES), DRUMS=[36,38,42,46,39,41,47,49];
 const NOTES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
 const LBL=['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B']; // short note names for the lane buttons
-const mk=(scale,oct,ch)=>({kv:100,km:false,rs:0,acc:new Int8Array(128),no:new Int8Array(128),loct:new Int8Array(8),dir:0,ldir:new Int8Array(8).fill(-1),prob:new Uint8Array(16).fill(100),g:new Uint8Array(16),vel:new Uint8Array(16).fill(100),gate:new Uint8Array(16).fill(50),sm:new Uint8Array(16),ln:new Uint8Array(128),lm:new Uint8Array(8),lo:new Uint8Array(8),hi:new Uint8Array(8).fill(15),scale,oct,ch,mute:false,so:null,port:null,div:1,jmp:false});
-const S={tdm:false,am:0,pv:false,models:['mk3','mk3'],cm:false,dl:null,dm:false,gv:false,vv:false,swap:false,mm:false,mall:false,len:16,ext:null,sync:false,devs:{},conn:false,mh:false,bpm:120,playing:false,hd:null,arm:null,sel:0,root:0,tracks:[mk('Minor pentatonic',0,0),mk('Minor pentatonic',1,1),mk('Minor pentatonic',-1,2),mk('Drums',0,9)]};
+const mk=(scale,oct,ch)=>({lvel:new Uint8Array(128).fill(100),lgate:new Uint8Array(128).fill(50),lprob:new Uint8Array(128).fill(100),fvel:new Uint8Array(8),fgate:new Uint8Array(8),fprob:new Uint8Array(8),kd:false,pats:Array(8).fill(null),pi:0,cue:-1,kv:100,km:false,rs:0,acc:new Int8Array(128),no:new Int8Array(128),loct:new Int8Array(8),dir:0,ldir:new Int8Array(8).fill(-1),prob:new Uint8Array(16).fill(100),g:new Uint8Array(16),vel:new Uint8Array(16).fill(100),gate:new Uint8Array(16).fill(50),sm:new Uint8Array(16),ln:new Uint8Array(128),lm:new Uint8Array(8),lo:new Uint8Array(8),hi:new Uint8Array(8).fill(15),scale,oct,ch,mute:false,so:null,port:null,div:1,jmp:false});
+const S={vl:null,pm:false,pcp:false,tdm:false,am:0,pv:false,models:['mk3','mk3'],cm:false,dl:null,dm:false,gv:false,vv:false,swap:false,mm:false,mall:false,len:16,ext:null,sync:false,devs:{},conn:false,mh:false,bpm:120,playing:false,hd:null,arm:null,sel:0,root:0,tracks:[mk('Minor pentatonic',0,0),mk('Minor pentatonic',1,1),mk('Minor pentatonic',-1,2),mk('Drums',0,9)]};
 const cur=()=>S.tracks[S.sel];
 Object.defineProperty(S,'km',{get:()=>!!S.tracks[S.sel].km,set:v=>{S.tracks[S.sel].km=!!v;}}); // Key mode belongs to the track: S.km is the selected track's flag
 const eff=t=>(S.root+(t.rs||0))%12; // effective root of a track: global root plus the track's own shift
@@ -327,7 +327,7 @@ function onPad(i,d){
  if(m.g){if(m.up)releasePad(i*8+m.g[1],m.g[0]);else pressPad(i*8+m.g[1],m.g[0]);}else if(!m.up)ctrl(i,m.c);
 }
 function ctrl(i,n){ // Key mode only lets a few buttons through
- if(!S.km)return ctrl0(i,n);
+ if(!S.km||S.pm)return ctrl0(i,n);
  const k=n>90?n-90:0,idx=n%10===9?8-Math.floor(n/10):-1,t=cur();
  if(n>90){
   if(i===0&&(k===5||k===6)){t.oct=Math.max(-3,Math.min(3,t.oct+(k===5?-1:1)));return render();} // direct octave change
@@ -335,16 +335,20 @@ function ctrl(i,n){ // Key mode only lets a few buttons through
   return;
  }
  if(i===1&&idx>=0){t.kv=Math.round(10+(7-idx)*117/7);say('Key velocity '+t.kv);return render();} // lane buttons: velocity slider 10–127
+ if(i===0&&idx===6&&!S.dm){t.kd=!t.kd;kOff();say(kDr(t)?'Drum pad layout.':'Keyboard layout.');return render();} // Vel toggles keyboard / drum pads
  if(i===0&&(S.dm||idx<4||idx===7))return ctrl0(i,n); // T1–T4 switch to another track, which brings its own mode
 }
 function ctrl0(i,n){
  const t=cur();
+ if(S.pm){const rc=i===0&&n%10===9?8-Math.floor(n/10):-1; // pattern view: T1-T4, Play and Copy keep it open
+  if(rc===6){S.pcp=!S.pcp;say(S.pcp?'Copy: press the destination pattern.':'');return render();}
+  if(!(rc>=0&&rc<4)&&!(i===0&&n===91)){S.pm=false;S.pcp=false;if(rc===7){say('');return render();}}}
  if(S.tdm){S.tdm=false;if(i===0&&n===19){say('');return render();}} // tempo divider mode ends with any button; Mode itself only leaves
  if(n>90){const k=n-90;
   if(k===7){S.swap=!S.swap;return render();}
   if(k===8)return extBtn();
   if(i===0){if(k===1){if(S.cm)clearAll();else if(mm())toggleAll();else togglePlay();}else if(k===2)return muteBtn();else if(k===3)setLen(S.len-1);else if(k===4)setLen(S.len+1);else if(k===5||k===6){const nm=k===5?-1:1,was=S.om===nm;S.om=was?0:nm;S.am=0;S.dm=false;S.cm=false;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.arm=null;say(S.om?`Octave ${S.om<0?'−':'+'}: press a note, lane button, or track button (press the button again to cancel).`:'Octave change cancelled.');}}
-  else{if((k===1||k===2)&&S.dm){S.dm=false;S.dl=null;S.tdm=true;say('Tempo divider: the top four pad rows are tracks 1–4 (leftmost pad 1, rightmost pad 16 across both pads). Press a pad to set that track\'s divider. Press Mode to leave.');}else if(k===1)setBpm(S.bpm-5);else if(k===2)setBpm(S.bpm+5);
+  else{if((k===1||k===2)&&S.dm){S.dm=false;S.dl=null;S.tdm=true;say('Tempo divider: the top four pad rows are tracks 1–4 (leftmost pad 1, rightmost pad 16 across both pads). Press a pad to set that track\'s divider. Press Mode to leave.');}else if((k===3||k===4)&&S.dm)return patEnter();else if(k===1)setBpm(S.bpm-5);else if(k===2)setBpm(S.bpm+5);
    else if(k===3)t.scale=SN[(SN.indexOf(t.scale)+SN.length-1)%SN.length];else if(k===4)t.scale=SN[(SN.indexOf(t.scale)+1)%SN.length];
    else if(k===5||k===6){if(S.dm){const d=k===5?11:1;rootChg([t],()=>{t.rs=((t.rs||0)+d)%12;});S.dm=false;S.dl=null;say('Root changed for this track only.');}else if(t.scale==='Chromatic'&&!S.km)return accBtn(k===5?-1:1);else{const d=k===5?11:1;rootChg(S.tracks,()=>{S.root=(S.root+d)%12;});}}}
  }else if(i===0&&n%10===9){const idx=8-Math.floor(n/10);if(S.cm&&idx<4)clearTrack(idx);else if(S.dm&&idx===6)return keyBtn();else if(S.dm&&idx===5){t.jmp=!t.jmp;if(!t.jmp)holds[S.sel]=[];S.dm=false;S.dl=null;say(t.jmp?'Jump on: hold a bottom-row pad to hold this track on that step.':'Jump off.');}else if(S.dm&&idx<5){const t=cur();if(S.dl!==null)t.ldir[S.dl]=idx;else{t.dir=idx;t.ldir.fill(-1);}S.dm=false;S.dl=null;}else if(idx<4){if(S.om){const tr=S.tracks[idx];tr.oct=Math.max(-3,Math.min(3,tr.oct+S.om));S.om=0;say('Track octave changed.');}else if(mm())S.tracks[idx].mute=!S.tracks[idx].mute;else S.sel=idx;}else if(idx===4)return probBtn();else if(idx===5)return gateBtn();else if(idx===6)return velBtn();else if(idx===7)return dirBtn();}
@@ -362,7 +366,7 @@ function dirBtn(){
 // Slider views: a Pad B right-column button sets all 16 steps of the selected track to its level
 function setAll(r){
  const t=cur(),kind=S.vv?'vel':S.gv?'gate':'prob',th=Math.round((r+1)*KR[kind][1]/8);
- t[kind].fill(S.pv&&r===0&&t.prob.every(x=>x===th)?0:th); // probability: bottom button twice = 0%
+ vall(kind,S.pv&&r===0&&Array.from({length:16},(_,x)=>vget('prob',x)).every(x=>x===th)?0:th); // probability: bottom button twice = 0%
  render();
 }
 // Chromatic scale: Pad B top row 5 (flat) and 6 (sharp) toggle an accidental mode; afterwards pads change single notes
@@ -388,24 +392,24 @@ function accPress(step,r){
  t.acc[j]=v;render();
 }
 function probBtn(){
- const a=S.arm,t=cur();
+ const a=S.arm,t=cur(),vl0=vlane();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
- S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.dm=false;S.cm=false;S.am=0;S.pv=!S.pv;
- if(S.pv)say('Probability view: each column sets the chance (0–100%) that the step plays. Press the bottom pad twice for 0%.');
+ S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.dm=false;S.cm=false;S.am=0;S.pv=!S.pv;S.vl=S.pv?vl0:null;
+ if(S.pv)say((S.vl!=null?'Lane '+(S.vl+1)+' only. ':'')+'Probability view: each column sets the chance (0–100%) that the step plays. Press the bottom pad twice for 0%.');
  render();
 }
 function gateBtn(){
- const a=S.arm,t=cur();
+ const a=S.arm,t=cur(),vl0=vlane();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
- S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.dm=false;S.cm=false;S.pv=false;S.am=0;S.gv=!S.gv;
- if(S.gv)say('Gate view: each column sets the gate length of the notes in that step (100% = whole step; extended notes are not affected).');
+ S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.dm=false;S.cm=false;S.pv=false;S.am=0;S.gv=!S.gv;S.vl=S.gv?vl0:null;
+ if(S.gv)say((S.vl!=null?'Lane '+(S.vl+1)+' only. ':'')+'Gate view: each column sets the gate length of the notes in that step (100% = whole step; extended notes are not affected).');
  render();
 }
 function velBtn(){
- const a=S.arm,t=cur();
+ const a=S.arm,t=cur(),vl0=vlane();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
- S.arm=null;S.ext=null;S.mm=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.cm=false;S.vv=!S.vv;
- if(S.vv)say('Velocity view: each column sets the velocity of all notes in that step.');
+ S.arm=null;S.ext=null;S.mm=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.cm=false;S.vv=!S.vv;S.vl=S.vv?vl0:null;
+ if(S.vv)say((S.vl!=null?'Lane '+(S.vl+1)+' only. ':'')+'Velocity view: each column sets the velocity of all notes in that step.');
  render();
 }
 function muteBtn(){
@@ -450,13 +454,14 @@ function extPress(step,r){
  S.ext=null;render();
 }
 function pressPad(step,r){
+ if(S.pm){if(step<8&&r>=3)patPress(step,r);return;}
  if(S.km)return kbPress(step,r);
  if(S.tdm){if(r>=4)S.tracks[7-r].div=step+1;render();return;} // tempo divider sliders: row 8 = track 1 … row 5 = track 4
- if(S.pv){const t=cur(),th=Math.round((r+1)*100/8);t.prob[step]=(r===0&&t.prob[step]===th)?0:th;render();return;}
+ if(S.pv){const th=Math.round((r+1)*100/8);vset('prob',step,(r===0&&vget('prob',step)===th)?0:th);render();return;}
  if(S.am){accPress(step,r);return;}
  if(S.om){const t=cur(),ix=r*16+step,b=span(t,r,step);if(b>=0){const j=r*16+b;t.no[j]=Math.max(-3,Math.min(3,(t.no[j]||0)+S.om));say('Note octave changed.');}S.om=0;return render();} if(S.cm){if(r===0)clearStep(step);return;} // clear mode: bottom-row pads clear a step
- if(S.gv){cur().gate[step]=Math.round((r+1)*100/8);render();return;}
- if(S.vv){cur().vel[step]=Math.round((r+1)*127/8);render();return;}
+ if(S.gv){vset('gate',step,Math.round((r+1)*100/8));render();return;}
+ if(S.vv){vset('vel',step,Math.round((r+1)*127/8));render();return;}
  if(mm()){if(r===0){cur().sm[step]^=1;render();}return;}
  if(S.ext)return extPress(step,r);
  if(cur().jmp&&r===0&&!(S.arm&&S.arm.r===0))return jumpTo(step); // Jump mode: bottom row moves the playhead instead of editing notes
@@ -475,19 +480,20 @@ function releasePad(step,r){if(S.km){kbRelease(step,r);return;}holds.forEach((h,
 const KW=[0,2,4,5,7,9,11,12],KBK=[-1,1,3,-1,6,8,10,-1]; // white keys (lower row) and black keys (upper row, above D E . G A B: C♯ D♯ . F♯ G♯ A♯)
 const DC=[[127,20,20],[127,70,0],[110,100,0],[40,115,10],[0,105,115],[20,50,127],[90,20,127],[127,20,75]]; // Drums: colour of each of the eight drum pads
 const kA=new Map(),kB=new Map(),kRep=new Map();let ksig=''; // sounding keys: Pad A (while pressed), Pad B (latched); pad key = row*16+step
-const sg=()=>{const t=cur();return[S.sel,t.scale,t.oct,eff(t),t.ch,t.so&&t.so.id].join();};
+const kDr=t=>(t.scale==='Drums')!==!!t.kd; // drum pad layout: the Drums scale, flipped by Vel in Key mode
+const sg=()=>{const t=cur();return[S.sel,t.kd,t.scale,t.oct,eff(t),t.ch,t.so&&t.so.id].join();};
 const kSounding=()=>new Set([...kA.values(),...kB.values(),...kRep.values()].map(e=>e.n));
 function kbNote(t,r,c){ // note under the pad in row r (0 = bottom), column c; -1 = none. Four keyboards of two rows; the second from the bottom is the track octave
  const up=r&1,o=12*(t.oct+(r>>1)-1);let n;
- if(t.scale==='Drums')n=DRUMS[(r>>1)*2+(c>>2)]+12*t.oct; // eight drum pads, each 4 wide x 2 high, lowest bottom left, highest top right
- else if(t.scale==='Chromatic'){const x=up?KBK[c]:KW[c];if(x<0)return-1;n=48+eff(t)+o+x;}
+ if(kDr(t)){const p=(r>>1)*2+(c>>2);if(t.scale==='Drums')n=DRUMS[p]+12*t.oct;else{const sc=SCALES[t.scale];n=48+eff(t)+12*t.oct+12*Math.floor(p/sc.length)+sc[p%sc.length];}} // General MIDI drums only on the Drums scale; otherwise the pads play the scale notes from the root (lowest bottom left) // eight drum pads, each 4 wide x 2 high, lowest bottom left, highest top right
+ else if(t.scale==='Chromatic'||t.scale==='Drums'){const x=up?KBK[c]:KW[c];if(x<0)return-1;n=48+eff(t)+o+x;}
  else{if(up)return-1;const sc=SCALES[t.scale];n=48+eff(t)+o+12*Math.floor(c/sc.length)+sc[c%sc.length];}
  return n<0||n>127?-1:n;
 }
 function kbCol(t,r,c){
- if(t.scale==='Drums')return DC[(r>>1)*2+(c>>2)].map(v=>(v*.65)|0);
+ if(kDr(t))return DC[(r>>1)*2+(c>>2)].map(v=>(v*.65)|0);
  const up=r&1,cu=(r>>1)===1,tc=TC[S.sel],sc=SCALES[t.scale];
- if(!up&&(t.scale==='Chromatic'?(c===0||c===7):(sc&&c%sc.length===0)))return cu?tc:[0,45,15]; // root
+ if(!up&&(t.scale==='Chromatic'||t.scale==='Drums'?(c===0||c===7):(sc&&c%sc.length===0)))return cu?tc:[0,45,15]; // root
  return cu?(up?tc.map(v=>v>>2):tc.map(v=>v>>1)):(up?[6,6,14]:[26,26,36]);
 }
 function kOn(m,key,t,n){const e={p:t.port,ch:t.ch,n};if(e.p&&!t.mute&&!S.mall)e.p.send([0x90|e.ch,n,t.kv||100]);m.set(key,e);}
@@ -502,7 +508,7 @@ function kOff(all=true){kRep.forEach(e=>clearInterval(e.tm));kRep.clear();[...kA
 function kbPress(step,r){
  const t=cur(),n=kbNote(t,r,step&7);if(n<0)return;
  const key=r*16+step;
- if(t.scale==='Drums'){
+ if(kDr(t)){
   if(step<8){if(!kA.has(key)&&![...kA.values()].some(e=>e.n===n))kOn(kA,key,t,n);}
   else{const p=(r>>1)*2+((step&7)>>2);if(!kRep.has(p))kRepStart(p,key,t,n);}
   return render();
@@ -533,7 +539,7 @@ function laneBtn(r){
 function cmBtn(){
  const a=S.arm,t=cur();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
- S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.tdm=false;S.cm=!S.cm;
+ S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.tdm=false;S.pm=false;S.pcp=false;S.cm=!S.cm;
  if(S.cm)say('Clear: press a track button (clear that track), a lane button (clear that lane), a bottom-row pad (clear that step) or Play (clear everything).');
  render();
 }
@@ -566,11 +572,12 @@ function topCol(i,k){
  if(k===8)col=S.ext?[0,127,90]:[0,25,18];
  if(i===1&&k<=2&&(S.dm||S.tdm))col=S.tdm?[0,127,127]:[60,60,0]; // BPM buttons enter / show tempo divider mode
  if(i===1&&(k===5||k===6)&&cur().scale==='Chromatic')col=k===6?(S.am>0?[127,80,0]:[60,35,0]):(S.am<0?[0,100,127]:[0,35,70]); if(i===1&&(k===5||k===6)&&S.dm)col=[60,60,0]; if(S.km&&!((i===0&&(k===1||k===2||k===5||k===6))||k===7||(i===1&&k>=3&&k<=6)))col=[0,0,0]; if(S.km&&i===1&&(k===5||k===6)&&!S.dm)col=[40,0,70]; // Mode + Root: this track only; Key mode greys out unused buttons // flat / sharp buttons
+ if(i===1&&(k===3||k===4)&&(S.dm||S.pm))col=S.pm?[0,127,127]:[60,60,0];
  return col;
 }
 // LED colour of a right-column button (i = logical pad, k = 0..7 from the top)
 function rightCol(i,k){const c=rightCol0(i,k);if(i===0&&k===6&&S.dm)return S.km?[0,127,100]:[0,40,35]; // Key
- if(S.km){if(i===1){const v=cur().kv||100,r=7-k,lv=Math.round(10+r*117/7),top=Math.floor((v-10)*7/117);return lv<=v?(r===top?[90,30,127]:[34,0,60]):[6,0,12];}if(i===0&&k>=4&&k<=6&&!S.dm)return[0,0,0];}return c;}
+ if(S.km){if(i===1){const v=cur().kv||100,r=7-k,lv=Math.round(10+r*117/7),top=Math.floor((v-10)*7/117);return lv<=v?(r===top?[90,30,127]:[34,0,60]):[6,0,12];}if(i===0&&k>=4&&k<=5&&!S.dm&&!S.pm)return[0,0,0];if(i===0&&k===6&&!S.dm&&!S.pm)return kDr(cur())?[127,60,0]:[50,25,0];}return c;}
 function rightCol0(i,k){
  const t=cur(),r=7-k;let col=[0,0,0];
  if(i===0&&k<4)col=S.cm?[127,40,0]:mm()&&S.tracks[k].mute?[127,0,0]:k===S.sel?TC[k]:TC[k].map(v=>v>>3);
@@ -579,18 +586,18 @@ function rightCol0(i,k){
  if(i===0&&k===4)col=S.pv?[30,127,60]:[10,40,20];
  if(i===0&&S.dm&&k<5)col=(S.dl!==null?effDir(t,S.dl):t.dir)===k?MC[k]:MC[k].map(v=>v>>2);
  if(i===0&&S.dm&&k===5)col=t.jmp?[0,127,127]:[0,45,45]; // Jump on/off
- if(i===0&&k===6)col=S.vv?[127,60,0]:[50,25,0];
+ if(i===0&&k===6)col=S.vv?[127,60,0]:[50,25,0];if(i===0&&k===6&&S.pm)col=S.pcp?[127,127,0]:[60,50,0];
  if(i===1)col=S.cm?[127,40,0]:mm()?(t.lm[r]?[127,0,0]:[0,60,0]):S.arm&&S.arm.r===r?[127,127,127]:(t.lo[r]!==0||t.hi[r]!==15)?[0,35,100]:[0,8,30];
  if(i===1&&S.dm)col=S.dl===r?[127,127,127]:MC[effDir(t,r)].map(v=>v>>2); if(i===1&&!S.dm&&!S.am&&!S.cm&&!mm()&&!S.vv&&!S.gv&&!S.pv&&(t.loct[r]||0)!==0)col=[127,35,110];
  if(i===1&&S.am)col=S.am>0?(canSharp(r)?[127,80,0]:[20,10,0]):(canFlat(r)?[0,100,127]:[0,10,20]); // lanes that accept the accidental
  if(i===1&&(S.vv||S.gv||S.pv)){ // bar showing the average of all steps
-  const kind=S.vv?'vel':S.gv?'gate':'prob',a=t[kind];let sum=0;for(let x=0;x<S.len;x++)sum+=a[x];
-  const v=sum/S.len;col=v>0&&v>=Math.round((r+1)*KR[kind][1]/8)?(S.vv?[34,0,60]:S.gv?[0,24,80]:[0,50,18]):[0,0,0];
+  const kind=S.vv?'vel':S.gv?'gate':'prob';let sum=0;for(let x=0;x<S.len;x++)sum+=vget(kind,x);
+  const v=sum/S.len;col=v>0&&v>=Math.round((r+1)*KR[kind][1]/8)?(S.vl!=null?[44,44,44]:S.vv?[34,0,60]:S.gv?[0,24,80]:[0,50,18]):[0,0,0];
  }
  return col;
 }
-const topLbl=(i,k)=>i===1&&k<=2&&(S.dm||S.tdm)?'Div':i===1&&(k===5||k===6)&&(S.dm||S.km)?(k===5?'Root−':'Root+'):i===0&&k===1?(S.playing?'Stop':'Play'):i===1&&(k===5||k===6)&&cur().scale==='Chromatic'?(k===5?'♭':'♯'):TL[i][k-1];
-const topTtl=(i,k)=>i===1&&(k===5||k===6)&&(S.dm||S.km)?(S.dm?'Root of this track only':k===5?'Root note down':'Root note up'):i===1&&(k===5||k===6)&&cur().scale==='Chromatic'?(k===5?'Flat mode: then press notes to flatten them':'Sharp mode: then press notes to sharpen them'):TT[i][k-1];
+const topLbl=(i,k)=>i===1&&(k===3||k===4)&&(S.dm||S.pm)?'Pat':i===1&&k<=2&&(S.dm||S.tdm)?'Div':i===1&&(k===5||k===6)&&(S.dm||S.km)?(k===5?'Root−':'Root+'):i===0&&k===1?(S.playing?'Stop':'Play'):i===1&&(k===5||k===6)&&cur().scale==='Chromatic'?(k===5?'♭':'♯'):TL[i][k-1];
+const topTtl=(i,k)=>i===1&&(k===3||k===4)&&(S.dm||S.pm)?'Pattern view':i===1&&(k===5||k===6)&&(S.dm||S.km)?(S.dm?'Root of this track only':k===5?'Root note down':'Root note up'):i===1&&(k===5||k===6)&&cur().scale==='Chromatic'?(k===5?'Flat mode: then press notes to flatten them':'Sharp mode: then press notes to sharpen them'):TT[i][k-1];
 const accCol=(c,a)=>a>0?c.map(v=>v+((127-v)>>1)):a<0?c.map(v=>(v*.55)|0):c; // sharp = lighter, flat = darker
 function led(i){
  const pi=i,o=pads[pi].out;if(!o)return;
@@ -599,11 +606,12 @@ function led(i){
  const add=(n,col)=>sp.push([n,col[0],col[1],col[2]]);
  for(let r=0;r<8;r++)for(let k=0;k<8;k++){
   const step=i*8+k,on=t.g[step]>>r&1,hd=S.playing&&S.hd&&S.hd[S.sel][r]===step;
+  if(S.pm){add((r+1)*10+k+1,patCol(i,r,k));continue;}
   if(S.km){const n=kbNote(t,r,k);add((r+1)*10+k+1,r===7&&kh.has(step)?[127,0,0]:n<0?[0,0,0]:ksn.has(n)?[127,127,127]:kbCol(t,r,k));continue;} // top row: playhead in red
   if(S.tdm){if(r>=4){const dv=S.tracks[7-r].div,tc=TC[7-r];add((r+1)*10+k+1,step<dv?(step===dv-1?tc:tc.map(v=>v>>2)):[3,3,5]);}else add((r+1)*10+k+1,[0,0,0]);continue;}
-  if(S.pv){const v=t.prob[step],lit=v>0&&v>=Math.round((r+1)*100/8),h=hs.has(step);add((r+1)*10+k+1,lit?(h?[60,127,80]:step>=S.len?[0,6,3]:[0,50,18]):h?[16,16,22]:[0,0,0]);continue;}
-  if(S.gv){const lit=t.gate[step]>=Math.round((r+1)*100/8),h=hs.has(step);add((r+1)*10+k+1,lit?(h?[60,110,127]:step>=S.len?[0,4,14]:[0,24,80]):h?[16,16,22]:[0,0,0]);continue;}
-  if(S.vv){const lit=t.vel[step]>=Math.round((r+1)*127/8),h=hs.has(step);add((r+1)*10+k+1,lit?(h?[110,60,127]:step>=S.len?[8,0,14]:[34,0,60]):h?[16,16,22]:[0,0,0]);continue;}
+  if(S.pv){const v=vget('prob',step),lit=v>0&&v>=Math.round((r+1)*100/8),h=hs.has(step);add((r+1)*10+k+1,lit?(h?[60,127,80]:step>=S.len?[0,6,3]:[0,50,18]):h?[16,16,22]:[0,0,0]);continue;}
+  if(S.gv){const lit=vget('gate',step)>=Math.round((r+1)*100/8),h=hs.has(step);add((r+1)*10+k+1,lit?(h?[60,110,127]:step>=S.len?[0,4,14]:[0,24,80]):h?[16,16,22]:[0,0,0]);continue;}
+  if(S.vv){const lit=vget('vel',step)>=Math.round((r+1)*127/8),h=hs.has(step);add((r+1)*10+k+1,lit?(h?[110,60,127]:step>=S.len?[8,0,14]:[34,0,60]):h?[16,16,22]:[0,0,0]);continue;}
   const lo=t.lo[r],hi=t.hi[r],armed=S.arm&&S.arm.r===r,show=armed||lo!==0||hi!==15;
   const inr=show&&step>=lo&&step<=hi,edge=show&&(step===lo||step===hi);
   const rt=isRoot(t,r),sb=span(t,r,step),tie=sb>=0&&sb<step,anc=!!(S.ext&&S.ext.a&&S.ext.a.r===r&&S.ext.a.s===step),ac=on&&t.scale==='Chromatic'?t.acc[r*16+step]:0;
@@ -626,7 +634,7 @@ function rightLbl(i,k){
  if(k<4)return S.dm?['Fwd','Rev','P-P','Rnd'][k]:'T'+(k+1);
  if(k===4)return S.dm?'Walk':'Prob';
  if(k===5)return S.dm?'Jump':'Gate';
- return k===6?(S.dm?'Key':'Vel'):'Mode';
+ return k===6?(S.pm?'Copy':S.dm?'Key':S.km?(kDr(cur())?'Keys':'Drum'):'Vel'):'Mode';
 }
 function mkRb(i,k){
  const n=(8-k)*10+9,b=document.createElement('button'),ttl=i===0?RT[0][k]:`Lane ${8-k}: loop start/end (mute in mute mode, select in stepping mode)`;
@@ -641,7 +649,7 @@ function makeMaster(d,kind){
  const[min,max]=KR[kind];
  d.innerHTML=`<div class="trk" role="slider" tabindex="0" aria-label="Set all steps (${kind})" aria-valuemin="${min}" aria-valuemax="${max}"><div class="fill"></div></div><span></span>`;
  const trk=d.firstChild;
- const set=v=>{cur()[kind].fill(Math.max(min,Math.min(max,v)));render();};
+ const set=v=>{vall(kind,Math.max(min,Math.min(max,v)));render();};
  const val=e=>{const b=trk.getBoundingClientRect();return Math.round(min+Math.min(1,Math.max(0,1-(e.clientY-b.top)/b.height))*(max-min));};
  trk.onpointerdown=e=>{if(e.button!==0)return;trk.setPointerCapture(e.pointerId);set(val(e));e.preventDefault();};
  trk.onpointermove=e=>{if(trk.hasPointerCapture(e.pointerId))set(val(e));};
@@ -712,17 +720,17 @@ function makeSlider(d,min,max,label,step,set){
 function setSl(d,v,min,max,suf){const t=d.firstChild;t.setAttribute('aria-valuenow',v);t.firstChild.style.height=((v-min)/(max-min)*100)+'%';d.lastChild.textContent=v+(suf||'');}
 for(let i=0;i<2;i++)for(let k=0;k<8;k++){
  const step=i*8+k,d=document.createElement('div');d.className='vs';
- makeSlider(d,1,127,'Velocity step '+(step+1),step,(s,v)=>{cur().vel[s]=v;});
+ makeSlider(d,1,127,'Velocity step '+(step+1),step,(s,v)=>{vset('vel',s,v);});
  d.style.gridColumn=k+1;d.style.gridRow='2 / span 8';$('#v'+i).append(d);
 }
 for(let i=0;i<2;i++)for(let k=0;k<8;k++){
  const step=i*8+k,d=document.createElement('div');d.className='gs';
- makeSlider(d,1,100,'Gate length step '+(step+1),step,(s,v)=>{cur().gate[s]=v;});
+ makeSlider(d,1,100,'Gate length step '+(step+1),step,(s,v)=>{vset('gate',s,v);});
  d.style.gridColumn=k+1;d.style.gridRow='2 / span 8';$('#gv'+i).append(d);
 }
 for(let i=0;i<2;i++)for(let k=0;k<8;k++){
  const step=i*8+k,d=document.createElement('div');d.className='ps';
- makeSlider(d,0,100,'Step probability '+(step+1),step,(s,v)=>{cur().prob[s]=v;});
+ makeSlider(d,0,100,'Step probability '+(step+1),step,(s,v)=>{vset('prob',s,v);});
  d.style.gridColumn=k+1;d.style.gridRow='2 / span 8';$('#pv'+i).append(d);
 }
 $('#oct').innerHTML=[-3,-2,-1,0,1,2,3].map(v=>`<option value="${v}">${v>0?'+'+v:v<0?'−'+-v:0}</option>`).join('');
@@ -759,10 +767,10 @@ function draw(){
   if(i===1)b.title=S.km?`Set key velocity to ${b.textContent}`:S.am?`${S.am>0?'Sharpen':'Flatten'} every note in this lane`:S.vv||S.gv||S.pv?`Set all steps to ${b.textContent}`:`Lane ${8-k} (${b.textContent}): loop start/end (mute in mute mode, select in stepping mode, clear in clear mode)`;});
  document.querySelectorAll('.logo').forEach(b=>b.style.background=css(+b.dataset.i===0?[24,0,0]:[0,24,0]));
  const hs=headSet(),ks=S.km?kSounding():null;
- document.querySelectorAll('.vs').forEach((d,step)=>{d.classList.toggle('hd',hs.has(step));const v=t.vel[step];setSl(d,v,1,127);d.classList.toggle('out',step>=S.len);});
- document.querySelectorAll('.gs').forEach((d,step)=>{d.classList.toggle('hd',hs.has(step));const v=t.gate[step];setSl(d,v,1,100,'%');d.classList.toggle('out',step>=S.len);});
- document.querySelectorAll('.ms').forEach(d=>{const kind=d.dataset.kind,[mn,mx,sf]=KR[kind],a=t[kind];let sum=0;for(let k=0;k<S.len;k++)sum+=a[k];setSl(d,Math.round(sum/S.len),mn,mx,sf);});
- document.querySelectorAll('.ps').forEach((d,step)=>{d.classList.toggle('hd',hs.has(step));setSl(d,t.prob[step],0,100,'%');d.classList.toggle('out',step>=S.len);});
+ document.querySelectorAll('.vs').forEach((d,step)=>{d.classList.toggle('hd',hs.has(step));const v=vget('vel',step);setSl(d,v,1,127);d.classList.toggle('out',step>=S.len);});
+ document.querySelectorAll('.gs').forEach((d,step)=>{d.classList.toggle('hd',hs.has(step));const v=vget('gate',step);setSl(d,v,1,100,'%');d.classList.toggle('out',step>=S.len);});
+ document.querySelectorAll('.ms').forEach(d=>{const kind=d.dataset.kind,[mn,mx,sf]=KR[kind];let sum=0;for(let k=0;k<S.len;k++)sum+=vget(kind,k);setSl(d,Math.round(sum/S.len),mn,mx,sf);});
+ document.querySelectorAll('.ps').forEach((d,step)=>{d.classList.toggle('hd',hs.has(step));setSl(d,vget('prob',step),0,100,'%');d.classList.toggle('out',step>=S.len);});
  document.querySelectorAll('.cell').forEach(b=>{
   const step=+b.dataset.i*8+ +b.dataset.k;
   b.classList.toggle('on',!!(t.g[step]>>b.dataset.r&1));
@@ -781,22 +789,76 @@ function draw(){
   b.classList.toggle('in',!!show&&step>=lo&&step<=hi);
   b.classList.toggle('edge',!!show&&(step===lo||step===hi));
   {const td=S.tdm&&r>=4?S.tracks[7-r].div:0;b.style.background=S.tdm?(td?(step<td?css(step===td-1?TC[7-r]:TC[7-r].map(v=>v>>1)):'#232731'):'#12141a'):'';if(S.tdm)b.textContent=td&&step===td-1?td:'';}
-  if(S.km){const c=+b.dataset.k,n=kbNote(t,r,c);b.style.background=r===7&&hs.has(step)?'#ff0000':n<0?'#0a0b0d':css(ks.has(n)?[127,127,127]:kbCol(t,r,c));b.textContent='';b.classList.remove('on','sh','fl','out','ml','tie','head','rt','in','edge','jmp','anc','smu','smm','cmt');}
+  if(S.pm){const ii=+b.dataset.i,rr=+b.dataset.r,cc=+b.dataset.k;b.style.background=css(patCol(ii,rr,cc));b.textContent=ii===0&&rr>=3?cc+1:'';b.classList.remove('on','sh','fl','out','ml','tie','head','rt','in','edge','jmp','anc','smu','smm','cmt');}
+  if(S.km&&!S.pm){const c=+b.dataset.k,n=kbNote(t,r,c);b.style.background=r===7&&hs.has(step)?'#ff0000':n<0?'#0a0b0d':css(ks.has(n)?[127,127,127]:kbCol(t,r,c));b.textContent='';b.classList.remove('on','sh','fl','out','ml','tie','head','rt','in','edge','jmp','anc','smu','smm','cmt');}
  });
 }
 function render(){if(cur().scale!=='Chromatic')S.am=0;{const g=sg();if(g!==ksig){kOff();ksig=g;}} // keys stop when track, scale, root, octave, channel or output change
  ui();draw();led(0);led(1);}
 
+/* ---------- Patterns: 8 per track. The active pattern lives in the track fields; the others are stored in t.pats ---------- */
+const LK=['lvel','lgate','lprob','fvel','fgate','fprob'];
+// Per-lane velocity / gate / probability: lane r of a track uses l<kind>[r*16+step] when f<kind>[r] is set, else the track's per-step values
+const vget=(kind,s)=>{const t=cur();return S.vl!=null&&t['f'+kind][S.vl]?t['l'+kind][S.vl*16+s]:t[kind][s];};
+function vset(kind,s,v){const t=cur();if(S.vl==null){t[kind][s]=v;return;}const l=S.vl,f=t['f'+kind],a=t['l'+kind];if(!f[l]){for(let x=0;x<16;x++)a[l*16+x]=t[kind][x];f[l]=1;}a[l*16+s]=v;} // the first edit copies the track values into the lane
+function vall(kind,v){const t=cur();if(S.vl==null){t[kind].fill(v);t['f'+kind].fill(0);return;}t['f'+kind][S.vl]=1;t['l'+kind].fill(v,S.vl*16,S.vl*16+16);} // track level: also removes every lane override of this kind
+const vlane=()=>S.arm?S.arm.r:(S.vv||S.gv||S.pv)?S.vl:null;
+const lv=(t,k,r,s)=>t['f'+k][r]?t['l'+k][r*16+s]:t[k][s];
+const PA=['g','ln','acc','no','lm','loct','sm','lo','hi','vel','gate','prob','ldir',...LK],PS=['dir','scale','oct','div','jmp','rs'];
+let BL=false; // blink phase of cued patterns
+const snap=t=>{const o={};PA.forEach(k=>o[k]=t[k].slice());PS.forEach(k=>o[k]=t[k]);return o;};
+const patLoad=(t,o)=>{PA.forEach(k=>t[k].set(o[k]));PS.forEach(k=>t[k]=o[k]);};
+const blank=t=>{const o=snap(mk(t.scale,t.oct,0));o.div=t.div;o.rs=t.rs;return o;};
+const pser=o=>{const r={};PA.forEach(k=>r[k]=[...o[k]]);PS.forEach(k=>r[k]=o[k]);return r;};
+const pdes=(s,t)=>{const o=blank(t);PA.forEach(k=>(s[k]||[]).slice(0,o[k].length).forEach((v,i)=>o[k][i]=v));o.dir=clamp(s.dir,0,4);if(SN.includes(s.scale))o.scale=s.scale;o.oct=clamp(s.oct,-3,3);o.div=clamp(s.div??1,1,16);o.jmp=!!s.jmp;o.rs=clamp(s.rs,0,11);return o;};
+const patHas=(x,k)=>k===x.pi?x.g.some(v=>v):!!(x.pats[k]&&x.pats[k].g.some(v=>v));
+function patCol(i,r,k){ // pattern view colour of a grid pad: Pad A rows 8-5 = tracks 1-4, row 4 = all tracks
+ if(i!==0||r<3)return[0,0,0];
+ if(r===3)return S.tracks.every(x=>x.pi===k)?[127,127,127]:BL&&S.tracks.some(x=>x.cue===k)?[127,127,127]:[28,28,40];
+ const x=S.tracks[7-r],c=TC[7-r];
+ return x.pi===k?c:x.cue===k?(BL?[127,127,127]:c.map(v=>v>>2)):patHas(x,k)?c.map(v=>v>>2):[4,4,6];
+}
+function patSwitch(t,p){
+ t.cue=-1;if(p===t.pi)return;
+ t.pats[t.pi]=snap(t);patLoad(t,t.pats[p]||blank(t));t.pi=p;
+ holds[S.tracks.indexOf(t)]=[];
+}
+function patPress(p,r){
+ (r===3?S.tracks:[S.tracks[7-r]]).forEach(t=>{
+  if(S.pcp){if(p!==t.pi)t.pats[p]=snap(t);}                    // copy the active pattern
+  else if(t.cue===p||(!S.playing&&p!==t.pi))patSwitch(t,p);     // second press, or stopped: switch now
+  else t.cue=p===t.pi?-1:p;                                      // cue (pressing the active pattern cancels)
+ });
+ if(S.pcp){S.pcp=false;say('Pattern copied.');}
+ render();
+}
+function patEnter(){S.dm=false;S.dl=null;S.pm=true;S.pcp=false;say('Pattern view: rows 1–4 = tracks 1–4, row 5 = all tracks. Press a pattern to cue it (again = switch now). Copy, then a pattern, copies the active pattern. Mode leaves.');render();}
+
 /* ---------- Persistence ---------- */
 const KEY='twin-pad-sequencer-v1';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Math.round(+v)||0));
-function ser(){return{app:'twin-pad-sequencer',v:1,bpm:S.bpm,root:S.root,sel:S.sel,conn:S.conn,sync:S.sync,swap:S.swap,models:S.models,len:S.len,devs:S.devs,
- tracks:S.tracks.map(t=>({acc:[...t.acc],no:[...t.no],loct:[...t.loct],dir:t.dir,ldir:[...t.ldir],prob:[...t.prob],g:[...t.g],vel:[...t.vel],gate:[...t.gate],sm:[...t.sm],ln:[...t.ln],lm:[...t.lm],lo:[...t.lo],hi:[...t.hi],scale:t.scale,oct:t.oct,ch:t.ch,mute:t.mute,so:t.so,div:t.div,jmp:!!t.jmp,rs:t.rs||0,km:!!t.km,kv:t.kv||100}))};}
+function ser(part='all'){ // part: 'all', 'midi' (devices, models, clock, per-track output and channel) or 'ptn' (everything else)
+ const m=part!=='ptn',p=part!=='midi',d={app:'twin-pad-sequencer',v:1};
+ if(m)Object.assign(d,{conn:S.conn,sync:S.sync,models:S.models,devs:S.devs});
+ if(p)Object.assign(d,{bpm:S.bpm,root:S.root,sel:S.sel,swap:S.swap,len:S.len});
+ d.tracks=S.tracks.map(t=>{const o={};
+  if(m){o.ch=t.ch;o.so=t.so;}
+  if(p)Object.assign(o,{acc:[...t.acc],no:[...t.no],loct:[...t.loct],dir:t.dir,ldir:[...t.ldir],prob:[...t.prob],g:[...t.g],vel:[...t.vel],gate:[...t.gate],sm:[...t.sm],ln:[...t.ln],lm:[...t.lm],lo:[...t.lo],hi:[...t.hi],scale:t.scale,oct:t.oct,mute:t.mute,div:t.div,jmp:!!t.jmp,rs:t.rs||0,km:!!t.km,kv:t.kv||100,kd:!!t.kd,...Object.fromEntries(LK.map(k=>[k,[...t[k]]])),pi:t.pi,pats:t.pats.map((q,i)=>i===t.pi?pser(snap(t)):q&&pser(q))});
+  return o;});
+ return d;
+}
 function apply(d){
- if(!d||!Array.isArray(d.tracks))throw new Error('not a Twin Pad Sequencer file');
- S.bpm=clamp(d.bpm||120,30,300);S.root=clamp(d.root,0,11);S.sel=clamp(d.sel,0,3);S.devs=d.devs&&typeof d.devs==='object'?d.devs:{};kOff();S.arm=null;S.om=0;S.sync=!!d.sync;S.swap=!!d.swap;S.models=[0,1].map(i=>{const mo=d.models?.[i]==='legacy'?'xy':d.models?.[i];return MODELS[mo]?mo:'mk3';});S.len=clamp(d.len??16,1,16);
- d.tracks.slice(0,4).forEach((t,i)=>{
-  const o=S.tracks[i];o.g.fill(0);o.acc.fill(0);o.no.fill(0);o.loct.fill(0);o.prob.fill(100);o.vel.fill(100);o.gate.fill(50);o.sm.fill(0);o.ln.fill(0);o.lm.fill(0);o.lo.fill(0);o.hi.fill(15);
+ if(!d||typeof d!=='object'||!(Array.isArray(d.tracks)||d.app==='twin-pad-sequencer'))throw new Error('not a Twin Pad Sequencer file');
+ kOff();S.arm=null;S.om=0;S.pm=false;S.pcp=false; // only the fields found in the file are loaded
+ if('bpm' in d)S.bpm=clamp(d.bpm||120,30,300);if('root' in d)S.root=clamp(d.root,0,11);if('sel' in d)S.sel=clamp(d.sel,0,3);if('sync' in d)S.sync=!!d.sync;if('swap' in d)S.swap=!!d.swap;if('len' in d)S.len=clamp(d.len??16,1,16);
+ if(d.devs&&typeof d.devs==='object')S.devs=d.devs;
+ if(Array.isArray(d.models))S.models=[0,1].map(i=>{const mo=d.models[i]==='legacy'?'xy':d.models[i];return MODELS[mo]?mo:'mk3';});
+ (d.tracks||[]).slice(0,4).forEach((t,i)=>{
+  const o=S.tracks[i];
+  if('ch' in t)o.ch=clamp(t.ch,0,15);
+  if('so' in t||d.devs?.so)o.so=t.so&&typeof t.so==='object'?{id:String(t.so.id||''),name:String(t.so.name||'')}:(d.devs?.so?{id:String(d.devs.so.id||''),name:String(d.devs.so.name||'')}:null); // old files: the former single output
+  if(!Array.isArray(t.g))return; // no pattern data in this file
+  o.g.fill(0);o.acc.fill(0);o.no.fill(0);o.loct.fill(0);o.prob.fill(100);o.vel.fill(100);o.gate.fill(50);o.sm.fill(0);o.ln.fill(0);o.lm.fill(0);o.lo.fill(0);o.hi.fill(15);
   (t.g||[]).slice(0,16).forEach((v,k)=>o.g[k]=clamp(v,0,255));
   (t.acc||[]).slice(0,128).forEach((v,k)=>o.acc[k]=clamp(v,-1,1));(t.no||[]).slice(0,128).forEach((v,k)=>o.no[k]=clamp(v,-3,3));(t.loct||[]).slice(0,8).forEach((v,k)=>o.loct[k]=clamp(v,-3,3));
   (t.prob||[]).slice(0,16).forEach((v,k)=>o.prob[k]=clamp(v,0,100));
@@ -807,8 +869,8 @@ function apply(d){
   (t.ln||[]).slice(0,128).forEach((v,k)=>o.ln[k]=clamp(v,0,16));
   for(let r=0;r<8;r++){const lo=clamp(t.lo?.[r]??0,0,15),hi=clamp(t.hi?.[r]??15,0,15);o.lo[r]=Math.min(lo,hi);o.hi[r]=Math.max(lo,hi);}
   {const sc=ALIAS[t.scale]||t.scale;if(SN.includes(sc))o.scale=sc;}
-  o.oct=clamp(t.oct,-3,3);o.dir=clamp(t.dir,0,4);o.ldir.fill(-1);(t.ldir||[]).slice(0,8).forEach((v,k)=>o.ldir[k]=clamp(v,-1,4));o.ch=clamp(t.ch,0,15);o.mute=!!t.mute;o.div=clamp(t.div??1,1,16);o.jmp=!!t.jmp;o.rs=clamp(t.rs,0,11);o.km=!!t.km;o.kv=clamp(t.kv??100,10,127);
-  o.so=t.so&&typeof t.so==='object'?{id:String(t.so.id||''),name:String(t.so.name||'')}:(d.devs?.so?{id:String(d.devs.so.id||''),name:String(d.devs.so.name||'')}:null); // old files: the former single output
+  o.oct=clamp(t.oct,-3,3);o.dir=clamp(t.dir,0,4);o.ldir.fill(-1);(t.ldir||[]).slice(0,8).forEach((v,k)=>o.ldir[k]=clamp(v,-1,4));o.mute=!!t.mute;o.div=clamp(t.div??1,1,16);o.jmp=!!t.jmp;o.rs=clamp(t.rs,0,11);o.km=!!t.km;o.kd=!!t.kd;LK.forEach(k=>{o[k].fill(k==='lgate'?50:k[0]==='f'?0:100);(t[k]||[]).slice(0,o[k].length).forEach((v,i)=>o[k][i]=clamp(v,0,255));});o.kv=clamp(t.kv??100,10,127);
+  o.pi=clamp(t.pi,0,7);o.cue=-1;o.pats=Array.from({length:8},(_,k)=>t.pats&&t.pats[k]&&k!==o.pi?pdes(t.pats[k],o):null);
  });
 }
 function pick(k){
@@ -821,11 +883,14 @@ function applyDevs(){if(!acc)return;resolveOuts();for(const k in sel)sel[k].valu
 let pt;
 function persist(){clearTimeout(pt);pt=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(ser()));}catch(e){}},250);}
 function restore(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d){apply(d);S.conn=!!d.conn;}}catch(e){}}
-$('#save').onclick=()=>{
+function dl(part,name){
  const a=document.createElement('a');
- a.href=URL.createObjectURL(new Blob([JSON.stringify(ser(),null,1)],{type:'application/json'}));
- a.download='twin-pad-session.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-};
+ a.href=URL.createObjectURL(new Blob([JSON.stringify(ser(part),null,1)],{type:'application/json'}));
+ a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+$('#saveall').onclick=()=>dl('all','twin-pad-all.json');
+$('#savemidi').onclick=()=>dl('midi','twin-pad-midi.json');
+$('#saveptn').onclick=()=>dl('ptn','twin-pad-patterns.json');
 $('#load').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
  const f=e.target.files[0];e.target.value='';if(!f)return;
@@ -839,7 +904,7 @@ const pdir=S.tracks.map(()=>new Int8Array(8).fill(1)); // ping-pong direction pe
 const pos=S.tracks.map(()=>new Int8Array(8).fill(-1)); // current step of every lane
 function togglePlay(){S.playing?stop():play();ui();}
 function play(fromMsg,cont){
- if(!cont){stepI=0;pos.forEach(a=>a.fill(-1));pdir.forEach(a=>a.fill(1));tp.fill(-1);clearHolds();}
+ if(!cont){stepI=0;pos.forEach(a=>a.fill(-1));pdir.forEach(a=>a.fill(1));tp.fill(-1);tc.fill(0);clearHolds();}
  tickCnt=0;S.playing=true;q=[];
  if(!S.sync){next=performance.now()+60;timer=setInterval(tick,25);}
  requestAnimationFrame(loop);render();ui();
@@ -887,7 +952,7 @@ function nextStep(tr,ti,r,m){
  return n;
 }
 // Random and random walk move ONE playhead per track; all lanes play that step.
-const tp=S.tracks.map(()=>-1),holds=S.tracks.map(()=>[]);
+const tc=S.tracks.map(()=>0),tp=S.tracks.map(()=>-1),holds=S.tracks.map(()=>[]);
 function clearHolds(){holds.forEach((_,i)=>holds[i]=[]);}
 function trackStep(tr,ti){
  const n=S.len,p=tp[ti];
@@ -899,14 +964,15 @@ function trackStep(tr,ti){
 }
 function sched(cnt,t,d){
  return S.tracks.map((tr,ti)=>{const dv=tr.div||1;if(tr.km&&!(cnt%dv))kRepFire(ti,t,d*dv);if(cnt%dv&&pos[ti][0]>=0)return[...pos[ti]]; // divided track: not due yet, keep its playhead
-  const hs=[],sh=tr.dir>=3,rolls={},dd=d*dv;let ts=0;
-  const ok=s=>{if(tr.prob[s]>=100)return true;if(!(s in rolls))rolls[s]=Math.random()*100;return rolls[s]<tr.prob[s];}; // one roll per step and tick, shared by all lanes
+  if(tr.cue>=0&&tc[ti]%S.len===0){patSwitch(tr,tr.cue);setTimeout(render,0);} // cued pattern starts when the track returns to step 1
+  tc[ti]++;const hs=[],sh=tr.dir>=3,rolls={},dd=d*(tr.div||1);let ts=0;
+  const ok=(s,r)=>{const p=lv(tr,'prob',r,s);if(p>=100)return true;const key=tr.fprob[r]?'l'+r+'_'+s:s;if(!(key in rolls))rolls[key]=Math.random()*100;return rolls[key]<p;}; // one roll per step and tick, shared by all lanes
   const hl=holds[ti],jp=hl.length?hl[hl.length-1].s:-1; // Jump: a held pad holds the playhead; after release the mode carries on from that step
   if(hl.length)hl[hl.length-1].used=true;holds[ti]=hl.filter((e,k)=>!(e.rel&&(e.used||k<hl.length-1)));
   if(sh){ts=jp>=0?jp:trackStep(tr,ti);tp[ti]=ts;}
   for(let r=0;r<8;r++){
    const own=tr.ldir[r]>=0,sh2=sh&&!own,s=sh2?ts:jp>=0&&jp>=el(tr,r)&&jp<=eh(tr,r)?jp:nextStep(tr,ti,r,own?tr.ldir[r]:tr.dir);pos[ti][r]=s;hs.push(s);
-   if(tr.port&&!tr.km&&(!sh2||s>=el(tr,r)&&s<=eh(tr,r))&&!S.mall&&!tr.mute&&!tr.lm[r]&&!tr.sm[s]&&tr.g[s]>>r&1&&ok(s)){const n=Math.max(0,Math.min(127,pitch(tr,r)+(tr.no[r*16+s]||0)*12+(tr.scale==='Chromatic'?tr.acc[r*16+s]:0))),L=Math.max(1,Math.min(tr.ln[r*16+s]||1,eh(tr,r)-s+1));tr.port.send([0x90|tr.ch,n,tr.vel[s]||100],t);tr.port.send([0x80|tr.ch,n,0],t+(L>1?dd*(L-.1):Math.min(dd*(tr.gate[s]||50)/100,dd-1)));}
+   if(tr.port&&!tr.km&&(!sh2||s>=el(tr,r)&&s<=eh(tr,r))&&!S.mall&&!tr.mute&&!tr.lm[r]&&!tr.sm[s]&&tr.g[s]>>r&1&&ok(s,r)){const n=Math.max(0,Math.min(127,pitch(tr,r)+(tr.no[r*16+s]||0)*12+(tr.scale==='Chromatic'?tr.acc[r*16+s]:0))),L=Math.max(1,Math.min(tr.ln[r*16+s]||1,eh(tr,r)-s+1));tr.port.send([0x90|tr.ch,n,lv(tr,'vel',r,s)||100],t);tr.port.send([0x80|tr.ch,n,0],t+(L>1?dd*(L-.1):Math.min(dd*(lv(tr,'gate',r,s)||50)/100,dd-1)));}
   }
   return hs;});
 }
@@ -921,6 +987,7 @@ addEventListener('blur',()=>{clearHolds();kOff(false);});
 addEventListener('beforeunload',()=>pads.forEach((p,i)=>padExit(p,S.models[i])));
 if(innerWidth<760||innerHeight<520)$('#devbox').open=false; // more room on phones; open it to pick devices
 addEventListener('contextmenu',e=>{if(e.target.closest('.pads,.bar'))e.preventDefault();}); // no long-press menu on touch
+setInterval(()=>{BL=!BL;if(S.pm&&S.tracks.some(t=>t.cue>=0)){draw();led(0);led(1);}},350); // flashing cued patterns
 restore();ui();draw();if(S.conn)connect();
 </script>
 </body>
