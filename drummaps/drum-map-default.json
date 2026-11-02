@@ -1,0 +1,13 @@
+{
+  "name": "Default (General MIDI)",
+  "lanes": [
+    { "lane": 1, "label": "BD", "note": 36, "channel": null },
+    { "lane": 2, "label": "SD", "note": 38, "channel": null },
+    { "lane": 3, "label": "CH", "note": 42, "channel": null },
+    { "lane": 4, "label": "OH", "note": 46, "channel": null },
+    { "lane": 5, "label": "CP", "note": 39, "channel": null },
+    { "lane": 6, "label": "LT", "note": 41, "channel": null },
+    { "lane": 7, "label": "MT", "note": 47, "channel": null },
+    { "lane": 8, "label": "CR", "note": 49, "channel": null }
+  ]
+}

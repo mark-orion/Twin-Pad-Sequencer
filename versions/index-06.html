@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Twin Pad Sequencer</title>
+<style>
+:root{--bg:#fbfbf9;--fg:#1d2024;--mute:#5d646d;--line:#dcdfe3;--code:#eef0f2;--link:#0b5cad;--head:#f1f3f5;
+--t1:#e8a317;--t2:#1fb5c9;--t3:#c63fa6;--t4:#7fc21e}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#15171a;--fg:#e4e6e9;--mute:#9aa1aa;--line:#2f343a;--code:#22262b;--link:#7db8f2;--head:#1e2226}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1rem}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:74rem;margin:0 auto;padding:0 1.25rem 4rem;display:grid;grid-template-columns:15rem minmax(0,1fr);gap:3rem}
+.side{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:2rem 0;font-size:.875rem}
+.side ul{list-style:none;margin:0;padding:0}
+.side ul ul{margin:.15rem 0 .6rem;padding-left:.8rem;border-left:1px solid var(--line)}
+.side li{margin:.2rem 0}
+.side a{color:var(--mute);text-decoration:none}
+.side a:hover,.side a:focus-visible{color:var(--link);text-decoration:underline}
+main{min-width:0;max-width:46rem;padding-top:2rem}
+main>h1{font-size:2.1rem;line-height:1.2;margin:0 0 .6rem;letter-spacing:-.01em}
+main>h1+p{font-size:1.1rem;color:var(--mute)}
+.bar{display:flex;height:6px;margin:1rem 0 1.5rem;border-radius:3px;overflow:hidden}
+.bar i{flex:1}.bar i:nth-child(1){background:var(--t1)}.bar i:nth-child(2){background:var(--t2)}.bar i:nth-child(3){background:var(--t3)}.bar i:nth-child(4){background:var(--t4)}
+h2{font-size:1.5rem;margin:3rem 0 .8rem;padding-top:1.2rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2rem 0 .5rem}
+h1,h2,h3{position:relative}
+.pl{position:absolute;left:-1.1rem;color:var(--mute);text-decoration:none;opacity:0;font-weight:400}
+h2:hover .pl,h3:hover .pl,.pl:focus-visible{opacity:1}
+a{color:var(--link)}
+a:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+hr{display:none}
+pre{overflow-x:auto;background:var(--code);padding:.8rem 1rem;border-radius:4px;font-size:.88em}pre code{padding:0}
+ul,ol{padding-left:1.4rem}li{margin:.25rem 0}
+code{background:var(--code);padding:.1em .35em;border-radius:3px;font:.88em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tw{overflow-x:auto;margin:1rem 0;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:.5rem .75rem;border-bottom:1px solid var(--line)}
+th{background:var(--head);font-weight:600;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.toc-inline{background:var(--head);border:1px solid var(--line);border-radius:4px;padding:.8rem 1.2rem;margin:1.5rem 0}
+.toc-inline p{margin:0 0 .3rem}.toc-inline ol{margin:0}
+@media (max-width:60rem){.wrap{display:block}.side{display:none}.pl{display:none}}
+@media (min-width:60.01rem){.toc-inline{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="top">
+<nav class="side" aria-label="Manual sections"><ul><li><a href="#1-introduction">1. Introduction</a><ul><li><a href="#what-it-does">What it does</a></li><li><a href="#requirements">Requirements</a></li><li><a href="#basic-ideas">Basic ideas</a></li></ul></li><li><a href="#2-getting-started">2. Getting started</a><ul><li><a href="#launchpad-models">Launchpad models</a></li></ul></li><li><a href="#3-the-screen">3. The screen</a></li><li><a href="#4-basic-use">4. Basic use</a><ul><li><a href="#playing-and-stopping">Playing and stopping</a></li><li><a href="#entering-notes">Entering notes</a></li><li><a href="#choosing-a-track">Choosing a track</a></li><li><a href="#choosing-notes-and-sounds-for-a-track">Choosing notes and sounds for a track</a></li><li><a href="#sequence-length">Sequence length</a></li></ul></li><li><a href="#5-working-with-the-sequence">5. Working with the sequence</a><ul><li><a href="#loops-per-lane-polymetric-patterns">Loops per lane (polymetric patterns)</a></li><li><a href="#chromatic-scale-sharps-and-flats">Chromatic scale: sharps and flats</a></li><li><a href="#held-notes-extend-note">Held notes (extend note)</a></li><li><a href="#velocity-gate-length-and-probability-per-step">Velocity, gate length and probability (per step)</a></li><li><a href="#stepping-modes">Stepping modes</a></li><li><a href="#patterns">Patterns</a></li><li><a href="#drum-maps">Drum maps</a></li></ul></li><li><a href="#6-performance-tools">6. Performance tools</a><ul><li><a href="#mute-mode">Mute mode</a></li><li><a href="#clear-mode">Clear mode</a></li><li><a href="#key-mode">Key mode</a></li><li><a href="#randomize">Randomize</a></li><li><a href="#swap-pads">Swap pads</a></li></ul></li><li><a href="#7-saving-and-sync">7. Saving and sync</a><ul><li><a href="#saving">Saving</a></li><li><a href="#external-clock-and-start--stop">External clock and start / stop</a></li></ul></li><li><a href="#8-troubleshooting">8. Troubleshooting</a></li><li><a href="#9-reference">9. Reference</a><ul><li><a href="#91-defaults-and-limits">9.1 Defaults and limits</a></li><li><a href="#92-hardware-buttons">9.2 Hardware buttons</a></li><li><a href="#93-on-screen-controls">9.3 On-screen controls</a></li><li><a href="#94-scales">9.4 Scales</a></li><li><a href="#95-drum-map-drums-scale-bottom-lane-to-top-lane">9.5 Drum map (Drums scale, bottom lane to top lane)</a></li><li><a href="#96-stepping-modes">9.6 Stepping modes</a></li><li><a href="#97-timing-and-midi-output">9.7 Timing and MIDI output</a></li><li><a href="#98-led-colours">9.8 LED colours</a></li><li><a href="#99-launchpad-protocols">9.9 Launchpad protocols</a></li><li><a href="#910-session-file">9.10 Session file</a></li></ul></li></ul></nav>
+<main>
+<h1 id="twin-pad-sequencer-manual">Twin Pad Sequencer v06<a class="pl" href="#twin-pad-sequencer-manual" aria-label="Link to this section">#</a></h1><div class="bar" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div>© Mark Dammer, Forres, Scotland 2026</div>
+<div><p>Click here to <a href= "twin-pad-sequencer-latest.html" target="_blank" rel="noopener noreferrer">Start and enjoy Twin Pad</a></p></div>
+<div><p>Or download the file from the Twin Pad <a href="https://github.com/mark-orion/Twin-Pad-Sequencer" target="_blank" rel="noopener noreferrer">GitHub Repository</a></p>
+<p>The GitHub repository contains .sha256 and .md5 files for every version of Twin Pad so it is possible to check that the file you have is genuine.</p></div>
+<div><p>If you like Twin Pad &#x2615 <a href="https://buymeacoffee.com/markdammer" target="_blank" rel="noopener noreferrer">Buy me a coffee</a> &#x2615 - no obligation!</p></div>
+<table style="width: 100%">
+<tr>
+<td><img width="100%" src="images/twin-pad-ios.jpg" alt="Twin Pad on iOS"><figcaption>Twin Pad on iOS (with MIDIWeb)</figcaption></td>
+<td><img width="100%" src="images/twin-pad-velocity.jpg" alt="Twin Pad velocity settings mode"><figcaption>Sliders for setting velocity</figcaption></td>
+</tr>
+<tr>
+<td><img width="100%" src="images/android-galaxytab-s2.jpg" alt="Twin Pad on Android"><figcaption>Twin Pad on Android.<br>Reviving on an old Galaxy Tab S2 (2015)</figcaption></td>
+<td><img width="100%" src="images/twin-pad-sequencelength.jpg" alt="Standard sequencer view"><figcaption>Sequencer view using different lengths for different lanes for polymeters (horizontal blue)</figcaption></td>
+</tr>
+<tr>
+<td><img width="100%" src="images/twin-pad-keyboard.jpg" alt="Virtual Keyboard"><figcaption>Keyboard for manual playing</figcaption></td>
+<td><img width="100%" src="images/twin-pad-drumpads.jpg" alt="Virtual Drumpads"><figcaption>Drumpads for manual drumming</figcaption></td>
+</tr>
+<tr>
+<td><img width="50%" src="images/twin-pad-desktop.jpg" alt="Twin Pad on Linux"><figcaption>Twin Pad on a Linux desktop</figcaption></td>
+<td>
+<p>A few tips for better performance:</p>
+<ul>
+<li>Use a chromium based browser.<br>Chromium, Chrome, Edge etc.</li>
+<li>Browser extensions can cause problems.</li>
+<li>Do not open additional tabs.</li>
+<li>Do not minimize Browser window.</li>
+</ul>
+</td>
+</tr>
+</table>
+<h2>Disclaimer</h2>
+<p>This app was created with AI assistance. The code is modified and edited manually as well. This app does not contain any trackers or malware and can run completely offline without any interaction with the internet. After asking for permission from the user, the software is able to interact with MIDI devices connected to or MIDI software running on the host system.
+<br>You use this app at your own risk. The creator of this app, Mark Dammer takes no liability for any damage to person, animal, property, hardware or software caused by the use of this software.</p>
+<details>
+<summary>v06 Release Notes and History</summary>
+<table>
+<tr><td>
+<b>20261029 v01</b> - Initial release.
+</td></tr>
+<tr><td>
+<b>20261030 v02</b> - Fixes and added features:<ul>
+<li>Tempo divider per track for different speeds on different tracks.</li>
+<li>Jump mode: Jump to a specific step and stay there as long as you hold the button.</li>
+<li>MIDI instrument output on a per track basis. Useful for directly connecting to multiple USB MIDI devices.</li>
+</ul>
+</td></tr>
+<tr><td>
+<b>20261031 v03</b> - Bugfix release. Reorganized button mapping.
+</td></tr>
+<tr><td>
+<b>20261031 v04</b> - New feature: Virtual keyboard mode:<ul>
+<li>Play selected track manually with onscreen and Launchpad virtual keyboards.</li>
+<li>Keyboards adapt to chromatic / diatonic scale.</li>
+<li>Keyboards on Pad B are latched</li>
+<li>Drum configuration with 8 virtual Drum Pads.</li>
+<li>Drum pads on Pad B are (re)triggered by the sequencer clock.</li>
+</ul>
+</td></tr>
+<tr><td>
+<b>20261101 v05</b> - New feature: 8 patterns per track. Mode, then Scale◀/▶ opens pattern view; cue patterns (switch at step 1), switch immediately, switch all tracks, copy with Vel.<br>Key mode: Vel toggles keyboard / drum pad layout.<br>Per-lane velocity, gate and probability (lane button, then Vel / Gate / Prob).<br>Three save buttons (All, MIDI, Ptn); Load reads whatever a file contains.
+</td></tr>
+<tr><td>
+<b>20261102 v06</b> - New feature: custom drum maps (JSON). Set note, two-letter lane label and optional MIDI channel for each drum lane; the map applies to all Drums-scale tracks and is saved with the MIDI settings.
+</td></tr>
+<tr><td>
+</td></tr>
+</table>
+</details>
+<details>
+<summary>Twin Pad Features</summary>
+<h2>Twin Pad Sequencer — Features</h2>
+
+    <section aria-labelledby="system">
+      <h3 id="system">System Requirements</h3>
+      <ul>
+        <li>Chromium based web browser (Chromium, Chrome, Edge,...)</li>
+        <li>Browser with support for the WebMIDI API (Chromium based, see above, or MIDIWeb on iOS)</li>
+        <li>Desktop or mobile operating system (Linux, Mac, Windows, iOS, Android)</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="sequencing">
+      <h3 id="sequencing">Sequencing</h3>
+      <ul>
+        <li>4 tracks, each with 8 note lanes and 16 steps. Pad A shows steps 1–8 and Pad B shows steps 9–16.</li>
+        <li>Eight patterns per track. Patterns can be copied. Cued or immediate pattern change.</li>
+        <li>Sequence length of 1–16 steps. Notes beyond the length are kept and return when you lengthen the sequence. Changing the length never restarts playback.</li>
+        <li>Held notes that last several steps.</li>
+        <li>Per-lane loop ranges for polymetric patterns: every lane can loop over its own start and end step.</li>
+        <li>Five stepping modes per track: forward, reverse, ping-pong, random and random walk. Any single lane can override the track’s mode.</li>
+        <li>Jump: holding a bottom-row pad holds a track’s playhead on that step; when you let go the stepping mode carries on from there.</li>
+        <li>Per-step velocity, gate length and probability, drawn on the pads or with exact on-screen sliders. A master slider sets all 16 steps at once.</li>
+        <li>Mute lanes, tracks, steps or the whole app. Clear a track, lane or step. Randomize a track.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="pitch">
+      <h3 id="pitch">Pitch</h3>
+      <ul>
+        <li>Scales per track: minor and major pentatonic, the seven diatonic modes (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian), Chromatic and Drums (General MIDI drum map). A shared Root note applies to all tracks, and each track can be shifted from it separately. A root change from B to C (or C to B) moves the octave by one.</li>
+        <li>Sharps and flats on the Chromatic scale. Lanes run C D E F G A B C. Single notes or whole lanes can be sharpened or flattened, following the rule that E and B cannot be sharpened and F and C cannot be flattened.</li>
+        <li>Octave control at three levels, each from −3 to +3: per track, per lane and per note. Press Oct− or Oct+ first, then choose a note pad, a lane button or a track button. The offsets add up and also apply to drum tracks.</li>
+        <li>MIDI channel per track. Drums default to channel 10.</li>
+        <li>Key mode (Mode, then Vel): both pads become keyboards for the selected track, four octaves each. Pad A keys sound while held, Pad B keys latch. That track's sequencer is off meanwhile and keeps all its settings; the other tracks keep playing. The mode is stored per track.</li>
+        <li>Instrument output per track: every track can play a different synthesizer, DAW or virtual MIDI port.</li>
+        <li>Custom drum maps: load a JSON file that sets the note, a two-letter label and an optional MIDI channel for each of the 8 drum lanes.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="timing-sync">
+      <h3 id="timing-sync">Timing and sync</h3>
+      <ul>
+        <li>Internal clock with lookahead scheduling using Web MIDI timestamps, 30–300 BPM.</li>
+        <li>Tempo divider per track (1–16): a track with divider 2 runs at half speed, 3 at a third, and so on, which makes polyrhythms between tracks. Set it with the Tempo ÷ dropdown or directly on the pads.</li>
+        <li>External MIDI clock (24 PPQN) with Start, Continue and Stop messages from a chosen clock input.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="hardware-interface">
+      <h3 id="hardware-interface">Hardware and interface</h3>
+      <ul>
+        <li>Twin Pad can be operated solely through the web interface. Launchpads are optional.</li>
+        <li>One or two Launchpads. With one pad, a Swap button switches between steps 1–8 and 9–16 together with the second set of controls.</li>
+        <li>Supported Launchpad models (different models can be mixed):
+          <ul>
+            <li><strong>LP Mini MK3:</strong> Launchpad Mini MK3 (default)</li>
+            <li><strong>LP X:</strong> Launchpad X</li>
+            <li><strong>LP Pro:</strong> Launchpad Pro and Pro MK2</li>
+            <li><strong>LP X-Y Mode:</strong> Original Launchpad, X-Y layout</li>
+            <li><strong>LP Drum Mode:</strong> Original Launchpad, Drum Rack layout</li>
+          </ul>
+        </li>
+        <li>The Launchpad Pro MK3 is not supported.</li>
+        <li>Everything on the hardware is also on screen. The on-screen pads mirror the Launchpad LEDs and buttons, and the layout adapts to phones, tablets and desktops, including phone landscape.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="saving">
+      <h3 id="saving">Saving</h3>
+      <ul>
+        <li>Autosave in the browser a moment after every change, with automatic MIDI reconnect on load.</li>
+        <li>Save All, Save MIDI (devices, models, clock, outputs, channels, drum map) or Save Ptn (patterns) as <code>twin-pad-all.json</code>, <code>twin-pad-midi.json</code> or <code>twin-pad-patterns.json</code>; Load reads whatever a file contains for backups and for moving between computers. Files from older versions load with defaults for anything new.</li>
+      </ul>
+    </section>
+</details>
+<details>
+<summary>The Hybrid Manual/Vibe Coding Experiment</summary>
+<h2>The Hybrid Manual/Vibe Coding Experiment</h2>
+<h3>Why a partially "vibe coded" app?</h3>
+<p>I am coding to make a living and I am making electronic music as a means of joy and relaxation. When I had the idea to create this app, I wanted to avoid another project that adds to my screen time and mental exhaustion. Yes, I wanted to have it easy, fun and enjoyable and not take too long to have it ready for playing live. So I decided to walk a path I never walked before because all my professional work is hand coded without any AI involvement. The result is this "hybrid" app that was created using free Claude and ChatGPT accounts together with manual editing.</p>
+<p>My plan is to continue this experiment with locally hosted AI models.</p>
+<h3>Why a web app?</h3>
+<p>Creating an application that runs on almost every platform is often complicated. On top of that, when you want to add mobile devices you have to deal with the quirks of Play Store, App Store and rules and limitations that often neither serve the developer nor the user. So why not create an app that runs in the browser and consists of a single HTML file that can be hosted on a server or run locally and independent from a network connection.</p>
+<p>For a long time I was admiring the sequencers found in hardware like Oxi one, Deluge or the Linnstrument while on the other hand these devices are "budget busters" for me. This lead to the idea to create a feature rich performance sequencer that can use two Launchpads as one bigger control surface. This is not meant to be a copy of one of the devices listed earlier but based on my own idea of a performace sequencer.</p>
+<p>I hope you will enjoy the result.</p>
+</details>
+<details>
+<summary>Twin Pad Manual</summary>
+<h2>Twin Pad Manual</h2>
+<p>Twin Pad Sequencer is a step sequencer that runs in your web browser and can be controlled via the web interface or up to two Novation Launchpads. It sends MIDI notes to a synthesizer or DAW. This manual first explains how to use it, then ends with a detailed reference.</p>
+<div class="toc-inline"><p><strong>Contents</strong>
+1. <a href="#1-introduction">Introduction</a>
+2. <a href="#2-getting-started">Getting started</a>
+3. <a href="#3-the-screen">The screen</a>
+4. <a href="#4-basic-use">Basic use</a>
+5. <a href="#5-working-with-the-sequence">Working with the sequence</a>
+6. <a href="#6-performance-tools">Performance tools</a>
+7. <a href="#7-saving-and-sync">Saving and sync</a>
+8. <a href="#8-troubleshooting">Troubleshooting</a>
+9. <a href="#9-reference">Reference</a></p>
+<hr />
+<h2 id="1-introduction">1. Introduction<a class="pl" href="#1-introduction" aria-label="Link to this section">#</a></h2>
+<h3 id="what-it-does">What it does<a class="pl" href="#what-it-does" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>It has <strong>4 tracks</strong>. Each track has <strong>8 note lanes</strong> and <strong>16 steps</strong>.</li>
+<li>The two Launchpads together show one track at a time. <strong>Pad A</strong> shows steps 1–8 and <strong>Pad B</strong> shows steps 9–16. Each pad's 8×8 grid is steps across and lanes (notes) up.</li>
+<li><strong>One or two Launchpads:</strong> you can use <strong>one Launchpad or two</strong>. With two, each pad shows half of the sequence. With one, set up only Pad A and leave Pad B on "none"; the pad then shows steps 1–8, and <strong>Swap</strong> (top row button 7) switches it to steps 9–16 together with the second set of controls (tempo, scale, root, lane buttons). The screen always shows both pads.</li>
+<li>Everything you can do on a Launchpad you can also do on the screen, so the app also works with no Launchpad at all (mouse or touch only).</li>
+</ul>
+<h3 id="requirements">Requirements<a class="pl" href="#requirements" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><strong>Browser:</strong> Chromium based browser like Chrome or Edge. Support for the Web MIDI API, including SysEx is essential. For iOS the MIDIWeb app is recommended.</li>
+<li><strong>Hardware (optional):</strong> one or two Launchpads: LP Mini MK3, LP X, Launchpad Pro / Pro MK2, or an original Launchpad (X-Y or Drum Rack layout). Different models can be mixed.</li>
+<li><strong>Instrument output:</strong> a MIDI input on a synthesizer, DAW or virtual MIDI port, chosen separately for each track. The app makes no sound by itself.</li>
+<li><strong>How to open it:</strong> from disk or from <code>localhost</code>. The page asks for MIDI access when you click <strong>Connect MIDI</strong>.</li>
+</ul>
+<h3 id="basic-ideas">Basic ideas<a class="pl" href="#basic-ideas" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><strong>Selected track:</strong> the pads and the settings row always edit the <em>selected track</em>. The selected track's button is the brightest in the Pad A right column.</li>
+<li><strong>Lane:</strong> one row of notes. The bottom row is the lowest note.</li>
+<li><strong>Step:</strong> one 16th note. The default length is 16 steps, one bar.</li>
+<li><strong>Modes:</strong> several functions (mute, clear, extend note, velocity, gate, probability, stepping mode, loop setting) work as <em>modes</em>. You press a button to enter a mode, press a target, and then the mode ends or you press the button again. Entering one mode cancels another.</li>
+</ul>
+<hr />
+<h2 id="2-getting-started">2. Getting started<a class="pl" href="#2-getting-started" aria-label="Link to this section">#</a></h2>
+<ol>
+<li>Open the page in your browser.</li>
+<li>Click <strong>Connect MIDI</strong> and allow MIDI access, including SysEx. The status line reports how many inputs and outputs it found.</li>
+<li>Open <strong>MIDI devices</strong> if it is collapsed (it starts closed on small screens) and set:
+   - <strong>Pad A input / output</strong> and <strong>Pad B input / output</strong>: choose the <strong>MIDI</strong> port of each Launchpad, not the <strong>DAW</strong> port. With two identical pads, pick the first for A and the second for B. With a single Launchpad, set only Pad A and leave Pad B on "none".
+   - <strong>Pad A model / Pad B model</strong>: choose the matching Launchpad model (see <a href="#launchpad-models">Launchpad models</a>). The default is LP Mini MK3.
+   - <strong>Instrument output</strong> is not set here. Each track has its own, chosen in the settings row (see <a href="#choosing-notes-and-sounds-for-a-track">Choosing notes and sounds</a>).
+   - <strong>Clock input</strong>: optional, only if you want to sync to another device (see <a href="#external-clock-and-start--stop">Sync</a>).</li>
+<li>The pads light up. Press <strong>Play</strong> (top row, first button of Pad A, or on screen).</li>
+<li>Choose a track and click or press notes in the grid. Notes are sent on the channel set for that track.</li>
+</ol></div>
+<p>On the first connect the app sets up the devices for you: it picks the Launchpad ports it finds (first one for Pad A, second one for Pad B), guesses LP X or LP Pro from the port name, and gives every track an instrument output that is not a Launchpad (you can change it per track). <strong>Automatic setup never uses a port whose name contains "DAW"</strong> (and it skips Launchpad "standalone" ports). You can still choose any port yourself in the dropdowns. Your choices are saved and restored the next time the page opens, including the automatic reconnect.</p>
+<h3 id="launchpad-models">Launchpad models<a class="pl" href="#launchpad-models" aria-label="Link to this section">#</a></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Choice</th>
+<th>Use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LP Mini MK3</strong></td>
+<td>Launchpad Mini MK3 (default).</td>
+</tr>
+<tr>
+<td><strong>LP X</strong></td>
+<td>Launchpad X.</td>
+</tr>
+<tr>
+<td><strong>LP Pro</strong></td>
+<td>Launchpad Pro or Pro MK2. The Pro MK3 is not supported.</td>
+</tr>
+<tr>
+<td><strong>LP X-Y Mode</strong></td>
+<td>The original Launchpad, in its X-Y layout.</td>
+</tr>
+<tr>
+<td><strong>LP Drum Mode</strong></td>
+<td>The original Launchpad, in its Drum Rack layout.</td>
+</tr>
+</tbody>
+</table></div>
+<p>The two original-Launchpad choices use all eight top-row buttons (CC 68h–6Fh) and have only red and green LEDs with four levels each. Blue and cyan colours therefore show as green, the very dark blue of the loop range is hard to see, and there is no logo LED. Everything works the same otherwise.</p>
+<hr />
+<h2 id="3-the-screen">3. The screen<a class="pl" href="#3-the-screen" aria-label="Link to this section">#</a></h2>
+<p>From top to bottom:</p>
+<ol>
+<li><strong>Title row:</strong> the <strong>Connect MIDI</strong> button and a status line with messages and hints.</li>
+<li><strong>MIDI devices:</strong> the collapsible device and model selectors.</li>
+<li><strong>Top bar (stays visible while scrolling):</strong>
+   - <strong>BPM</strong> tempo field.
+   - <strong>External clock</strong> toggle button.
+   - <strong>Length</strong> of the sequence in steps.
+   - <strong>Save All</strong>, <strong>Save MIDI</strong>, <strong>Save Ptn</strong> and <strong>Load</strong> buttons.</li>
+<li><strong>Settings row</strong> for the selected track: <strong>Scale</strong>, <strong>Root</strong>, <strong>Octave</strong>, <strong>Tempo ÷</strong>, <strong>Instrument output</strong>, <strong>Channel</strong>, then <strong>CLR</strong> (clear mode) and <strong>RND</strong> (randomize).</li>
+<li><strong>The two pads.</strong> Each pad on screen copies a Launchpad:
+   - a <strong>top row</strong> of 8 buttons with a small cell for the <strong>logo</strong> at its right,
+   - the <strong>8×8 note grid</strong>,
+   - a <strong>right column</strong> of 8 buttons beside the grid.
+   Buttons show the same functions and the same LED colours as the hardware, and you click or tap them like the hardware buttons.</li>
+<li><strong>Hardware controls:</strong> a collapsible help section at the bottom.</li>
+</ol>
+<p>On a phone in portrait, the two pads are stacked. On a tablet or desktop they sit side by side. On a phone in landscape both pads fit next to each other under the top bar.</p>
+<hr />
+<h2 id="4-basic-use">4. Basic use<a class="pl" href="#4-basic-use" aria-label="Link to this section">#</a></h2>
+<h3 id="playing-and-stopping">Playing and stopping<a class="pl" href="#playing-and-stopping" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><strong>Play / Stop:</strong> the first button of Pad A's top row. On screen the label changes between Play and Stop.</li>
+<li><strong>Tempo:</strong> the <strong>BPM</strong> field (30–300), or the first two buttons of Pad B's top row (−5 and +5 BPM).</li>
+</ul>
+<h3 id="entering-notes">Entering notes<a class="pl" href="#entering-notes" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Press a pad in the grid to switch a note on or off. Row = lane (pitch), column = step.</li>
+<li>The note takes the colour of the selected track. The playhead is a lit column that moves across the grid.</li>
+<li><strong>Pad A</strong> covers steps 1–8 and <strong>Pad B</strong> covers steps 9–16.</li>
+</ul>
+<h3 id="choosing-a-track">Choosing a track<a class="pl" href="#choosing-a-track" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Press <strong>T1</strong> to <strong>T4</strong> in the Pad A right column (the top four buttons). The track colours are amber, cyan, magenta and lime. The selected track is brightest.</li>
+<li>The grid, scale, octave and channel then show and edit that track.</li>
+</ul>
+<h3 id="choosing-notes-and-sounds-for-a-track">Choosing notes and sounds for a track<a class="pl" href="#choosing-notes-and-sounds-for-a-track" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><strong>Scale</strong> (per track): the <strong>Scale</strong> dropdown or Pad B top row buttons 3 and 4 (previous and next). Lanes are scale degrees from the root up. <strong>Drums</strong> maps the 8 lanes to General MIDI drum notes.</li>
+<li><strong>Root</strong> (all tracks, shifted together): the <strong>Root</strong> dropdown (it shows the selected track's root) or Pad B top row buttons 5 and 6 (on a track set to <strong>Chromatic</strong> those two buttons become ♭ and ♯, see <a href="#chromatic-scale-sharps-and-flats">Chromatic scale</a>). Lanes that are the root note have a dark green background (not in Drums). <strong>One track only:</strong> press <strong>Mode</strong>, then <strong>Root−</strong> or <strong>Root+</strong> (they turn yellow; also on a Chromatic track) to shift the root of the selected track only. <strong>Octave carry:</strong> when a root changes from B to C the track's octave goes up by 1, from C to B it goes down by 1 (limit ±3, Drums excluded), so the pitch moves by one semitone.</li>
+<li><strong>Octave</strong> (per track, −3 to +3): the <strong>Octave</strong> dropdown changes the track octave directly. Pad A top-row <strong>Oct− / Oct+</strong> buttons arm an octave change (press the lit button again to cancel); then press a note pad to change that note, a Pad B lane button to change the whole lane (including empty steps), or a T1–T4 button to change the whole track. Note-specific octave changes reset when the note is switched off and on again.</li>
+<li><strong>Tempo ÷</strong> (per track, 1–16, default 1): the track advances only every Nth step, so it runs at 1/N of the tempo. Notes and gates stretch with it. Tracks stay in step with each other, and the divider never restarts playback. <strong>On the pads:</strong> press <strong>Mode</strong>, then <strong>BPM−</strong> or <strong>BPM+</strong> (Pad B top row, buttons 1 and 2, which show Div). The four top rows of both pads become one slider per track, top row = track 1, fourth row = track 4, with 16 positions across the two pads (leftmost pad 1, rightmost pad 16). Press a pad to set that track’s divider. Press <strong>Mode</strong> again, or any other button, to leave.</li>
+<li><strong>Instrument output</strong> (per track): the MIDI output this track plays to. Choose a different device per track to play several instruments at once. The default is the first port that is not a Launchpad. Changing it sends all-notes-off to the old device.</li>
+<li><strong>Channel</strong> (per track, 1–16): the <strong>Channel</strong> dropdown. Drums use channel 10 by default.</li>
+</ul>
+<h3 id="sequence-length">Sequence length<a class="pl" href="#sequence-length" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>Use <strong>Length</strong> (1–16) or Pad A top row buttons 3 and 4 (shorter and longer).</li>
+<li>Steps beyond the length are dark on the pads and faded on screen. Their notes are kept and come back when you lengthen the sequence again.</li>
+<li>Changing the length while playing never restarts the sequence.</li>
+</ul>
+<hr />
+<h2 id="5-working-with-the-sequence">5. Working with the sequence<a class="pl" href="#5-working-with-the-sequence" aria-label="Link to this section">#</a></h2>
+<h3 id="loops-per-lane-polymetric-patterns">Loops per lane (polymetric patterns)<a class="pl" href="#loops-per-lane-polymetric-patterns" aria-label="Link to this section">#</a></h3>
+<p>Each lane can loop over its own range of steps, so lanes of different lengths drift against each other.</p>
+<ol>
+<li>Press a button in the <strong>Pad B right column</strong> (one per lane; its label shows the lane's note). It turns white.</li>
+<li>Press a pad in that lane for the <strong>start</strong> step.</li>
+<li>Press a pad in that lane for the <strong>end</strong> step. The two presses can come in either order.</li>
+</ol>
+<p>Pressing the same pad twice gives a one-step loop. Press the lane button again before the second press to cancel and keep the old range. To go back to the full length, set the range from step 1 to step 16.</p>
+<p>Lanes with a custom range show dark blue between the start and end, with brighter blue on the first and last step, and their button in the right column is lit blue. The overall length still limits every lane.</p>
+<h3 id="chromatic-scale-sharps-and-flats">Chromatic scale: sharps and flats<a class="pl" href="#chromatic-scale-sharps-and-flats" aria-label="Link to this section">#</a></h3>
+<p>The <strong>Chromatic</strong> scale starts out like C major: the eight lanes are <strong>C D E F G A B C</strong> (they follow the Root setting). Single notes can then be sharpened or flattened.</p>
+<p>On a track set to Chromatic, Pad B top row buttons 5 and 6 change their job: instead of Root − / +, they become <strong>♭ (flat)</strong> and <strong>♯ (sharp)</strong> mode buttons (the on-screen labels change too).</p>
+<ol>
+<li>Press <strong>♯</strong> (button 6). It lights orange. Now press a note on the grid to <strong>sharpen</strong> it. Press an <strong>empty pad</strong> to create a sharpened note.</li>
+<li>Press <strong>♭</strong> (button 5). It lights blue. Now press a note to <strong>flatten</strong> it, or an empty pad to create a flattened note.</li>
+<li>Instead of a note, press a <strong>lane button</strong> in the Pad B right column to apply the accidental to the <strong>whole lane</strong>: every note in that lane of the selected track is sharpened (or flattened). Lanes that cannot take the accidental (E and B for sharp, F and C for flat) are shown dim and ignored. Empty steps stay empty.</li>
+<li>Press the same button again to leave the mode. Starting another mode also ends it.</li>
+</ol>
+<p>Rules:
+- <strong>E and B cannot be sharpened</strong> and <strong>F and C cannot be flattened</strong>. These presses are ignored (an empty pad stays empty). The rule follows the lane's place in the scale, so it still applies after you change the Root.
+- A note has at most one accidental. Pressing a sharpened note in flat mode (or a flattened note in sharp mode) brings it back to natural. Pressing ♯ on a sharpened note changes nothing.
+- <strong>Deleting a note</strong> (pressing it in normal mode) also removes its sharp or flat.
+- Sharp notes are drawn lighter than natural notes and flat notes darker. On screen they also carry a ♯ or ♭ sign.
+- Held notes keep their accidental, also when you extend them backwards.
+- The accidentals are stored in the track but only sound while the track is on Chromatic. If you switch the track to another scale, they are ignored, and they come back when you switch to Chromatic again. Clearing or randomizing a track removes them.
+- The lane buttons of Pad B keep showing the natural note names. A lane press follows the same one-step rule as a note press, so pressing ♯ on a lane whose notes are already sharp changes nothing, and pressing ♭ brings them back to natural.</p>
+<h3 id="held-notes-extend-note">Held notes (extend note)<a class="pl" href="#held-notes-extend-note" aria-label="Link to this section">#</a></h3>
+<p>A note can last several steps. It is played as one held note.</p>
+<ol>
+<li>Press the <strong>Extend</strong> button (top row button 8 on either pad). It lights bright teal.</li>
+<li>Press an existing note. It turns white.</li>
+<li>Press a step in the <strong>same lane</strong>, before or after the note.</li>
+</ol>
+<p>The note now covers all the steps in between. The extra steps are drawn in a dimmer version of the track colour. To shorten it, press one of the covered steps (the note ends just before it). Press the first step to remove the note. A held note is clipped at the end of its lane's loop.</p>
+<h3 id="velocity-gate-length-and-probability-per-step">Velocity, gate length and probability (per step)<a class="pl" href="#velocity-gate-length-and-probability-per-step" aria-label="Link to this section">#</a></h3>
+<p>Press <strong>Vel</strong>, <strong>Gate</strong> or <strong>Prob</strong> in the Pad A right column (the three buttons below T4: Prob, Gate, Vel from the top) to open a view in which each column is a <strong>step</strong> and the height sets the value for <strong>all notes in that step</strong>. Press the same button again to go back.</p>
+<ul>
+<li><strong>Velocity</strong> (default 100): on the pads there are 8 levels from 16 to 127. Sliders on screen give the exact value from 1 to 127.</li>
+<li><strong>Gate length</strong> (default 50%): the share of the step a note lasts, from 13% to 100% in 8 levels on the pads, or exactly 1–100% with the on-screen sliders. At 100% a note is held for the whole step. Held (extended) notes ignore the gate.</li>
+<li><strong>Probability</strong> (default 100%): the chance that the step is played, 0 = never and 100 = always. On the pads there are 8 levels from 13% to 100%. Press the <strong>bottom pad of a column twice</strong> to set 0%. The on-screen sliders give the exact value from 0 to 100. A step is decided as a whole: all of its notes play together or are skipped together, and the roll is made again every time the step comes round.</li>
+</ul>
+<p><strong>Setting all steps at once:</strong> in these views the <strong>Pad B right column becomes a master slider</strong>. Pressing one of its eight buttons sets <strong>all 16 steps</strong> of the selected track to that level (top button = highest, bottom = lowest; the buttons are labelled with the value they set). The lit buttons show the average of the steps. In the probability view press the bottom button twice to set 0%. On screen the master slider is one vertical slider beside Pad B.</p>
+<p><strong>For one lane only:</strong> press a <strong>Pad B lane button</strong> (it turns white), then <strong>Vel</strong>, <strong>Gate</strong> or <strong>Prob</strong>. The view then edits that lane's values only (the status line says which lane), and the master slider sets all 16 steps of that lane. The lane starts from the track's values and keeps its own from the first edit. In probability, a lane with its own values makes its own roll for each step. To return to the track values, open the view without choosing a lane (Press the view button to close it first) and move the master slider (Pad B right column) or press one of its buttons: this resets that parameter for <strong>all</strong> lanes. Editing single steps of the track view does not affect lanes that have their own values.</p>
+<p>The views show the playhead. On screen you can <strong>drag across several sliders</strong>, also from one pad to the other, to draw a curve. A fast swipe fills the sliders it skips. Sliders also work with the arrow keys.</p>
+<h3 id="stepping-modes">Stepping modes<a class="pl" href="#stepping-modes" aria-label="Link to this section">#</a></h3>
+<p>A track can play its steps forward, backward and in other orders.</p>
+<ol>
+<li>Press <strong>Mode</strong> in the Pad A right column (the <strong>bottom</strong> button).</li>
+<li>The five buttons from T1 down to <strong>Prob</strong> show the modes. Press one:
+   - <strong>T1</strong> forward (default)
+   - <strong>T2</strong> reverse
+   - <strong>T3</strong> ping-pong
+   - <strong>T4</strong> random
+   - <strong>Prob</strong> random walk</li>
+<li>The mode applies to the whole track and the selection ends. To leave the selection without choosing, press <strong>Mode</strong> again. <strong>Gate</strong> switches Jump on or off (see below) and <strong>Vel</strong> switches <a href="#key-mode">Key mode</a> on or off.</li>
+</ol>
+<p>To give <strong>one lane</strong> its own mode, press <strong>Mode</strong>, press a lane button in the Pad B right column, then press a mode button. That lane now follows its own mode. Choosing a mode for the whole track clears all the lane settings of that track.</p>
+<p>How the modes behave:
+- Forward, reverse and ping-pong run every lane inside its own loop range.
+- <strong>Random</strong> and <strong>random walk</strong> move <strong>one playhead for the whole track</strong>. All lanes play that step if it lies inside their loop range, so the range works as a filter. Random walk moves one step up or down at random and wraps around.
+- A lane with its own random mode moves its own playhead.</p>
+<p><strong>Jump:</strong> press <strong>Mode</strong>, then <strong>Gate</strong> to switch Jump on (or off again) for the selected track. While Jump is on, the bottom row of the note grid glows cyan and the track’s current stepping mode keeps running. <strong>Hold</strong> a bottom-row pad to hold the track’s playhead on that step: the step is played again on every tick for as long as the pad is down. When you let go, the track carries on in its stepping mode from that step. If you hold several pads, the last one pressed counts. A lane whose loop range does not contain that step ignores the hold and runs on as before. While Jump is on, the bottom row no longer toggles notes (switch Jump off to edit them). Jump needs the sequencer to be playing, and each track has its own Jump switch.</p>
+<h3 id="patterns">Patterns<a class="pl" href="#patterns" aria-label="Link to this section">#</a></h3>
+<p>Every track has <strong>8 patterns</strong>. A pattern holds everything of the track (notes, velocity, gate, probability, mutes, loop ranges, stepping modes, Jump, scale, root shift, octaves, tempo divider) except the MIDI output and channel. Pattern 1 is the default.</p>
+<ol>
+<li>Press <strong>Mode</strong>, then <strong>Scale◀</strong> or <strong>Scale▶</strong> (Pad B top row, they show Pat) to open <strong>pattern view</strong>.</li>
+<li>On Pad A the top four grid rows are tracks 1–4 (the same rows as the track buttons), patterns 1–8 from the left. The row below switches <strong>all four tracks</strong> at once.</li>
+<li>Press a pattern to <strong>cue</strong> it: its LED flashes and it starts when the track's playhead returns to step 1 (every Length steps of that track's own speed). Press it again to switch <strong>immediately</strong>. Pressing the active pattern cancels a cue. While stopped, patterns switch at once.</li>
+<li>To <strong>copy</strong>: press <strong>Vel</strong> (labelled Copy), then the destination pattern. The active pattern of that track (or of every track, in the bottom row) is copied there.</li>
+</ol>
+<p>Bright = active, flashing = cued, dim = contains notes. T1–T4 and Play work in pattern view; any other button leaves it. Patterns are saved with the session.</p>
+<h3 id="drum-maps">Drum maps<a class="pl" href="#drum-maps" aria-label="Link to this section">#</a></h3>
+<p>A drum map defines what each of the 8 lanes of a track on the <strong>Drums</strong> scale plays. The built-in map is the General MIDI map in <a href="#95-drum-map-drums-scale-bottom-lane-to-top-lane">9.5</a>. To use your own, write a JSON file and click <strong>Load</strong> next to <em>Drum map</em> in the MIDI devices section. <strong>Default</strong> returns to the built-in map.</p>
+<pre><code>{
+  "name": "My kit",
+  "lanes": [
+    { "lane": 1, "label": "BD", "note": 36, "channel": null },
+    { "lane": 2, "label": "SD", "note": 38, "channel": 10 }
+  ]
+}</code></pre>
+<ul>
+<li><strong>lane</strong>: 1 (bottom) to 8 (top).</li>
+<li><strong>label</strong>: up to two characters, shown on the Pad B lane buttons (on screen) while a Drums-scale track is selected. Without a map those buttons show the note name.</li>
+<li><strong>note</strong>: MIDI note 0–127.</li>
+<li><strong>channel</strong>: MIDI channel 1–16. Leave it empty (<code>null</code>, <code>""</code> or omit it) to use the track's own channel.</li>
+<li>Lanes missing from the file keep the default. A file with an error is rejected and the status line says why.</li>
+</ul>
+<p>The map applies to <strong>every track set to Drums</strong>, to the sequencer and to the Key mode drum pads (including their channels). Octave offsets still apply to the mapped notes. The map is saved with the MIDI settings (<strong>Save All</strong> and <strong>Save MIDI</strong>); the complete map is stored in the session file, so the original map file is not needed later. An example with the default map is <code>drum-map-default.json</code>.</p>
+<hr />
+<h2 id="6-performance-tools">6. Performance tools<a class="pl" href="#6-performance-tools" aria-label="Link to this section">#</a></h2>
+<h3 id="mute-mode">Mute mode<a class="pl" href="#mute-mode" aria-label="Link to this section">#</a></h3>
+<p>Press <strong>Mute</strong> (Pad A top row, second button). It turns red and stays on until you press it again. Then press a target:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A <strong>lane</strong> button (Pad B right column)</td>
+<td>Mutes or unmutes that lane of the selected track</td>
+</tr>
+<tr>
+<td>A <strong>track</strong> button T1–T4 (Pad A right column)</td>
+<td>Mutes or unmutes that track</td>
+</tr>
+<tr>
+<td>A <strong>bottom-row pad</strong> (either pad)</td>
+<td>Mutes or unmutes all notes in that step on the selected track</td>
+</tr>
+<tr>
+<td>The <strong>Play</strong> button</td>
+<td>Mutes or unmutes the whole app (the sequence keeps running)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Muted things show red, active ones green. Muted notes are dimmed on the grid.</p>
+<h3 id="clear-mode">Clear mode<a class="pl" href="#clear-mode" aria-label="Link to this section">#</a></h3>
+<p>Click <strong>CLR</strong> on screen (it has no hardware button). It turns orange, and so do the possible targets. Press one target and the mode ends:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Target</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A <strong>track</strong> button T1–T4</td>
+<td>Clears that track</td>
+</tr>
+<tr>
+<td>A <strong>lane</strong> button (Pad B right column)</td>
+<td>Clears that lane of the selected track</td>
+</tr>
+<tr>
+<td>A <strong>bottom-row pad</strong></td>
+<td>Clears that step (all lanes) of the selected track</td>
+</tr>
+<tr>
+<td>The <strong>Play</strong> button</td>
+<td>Clears every track</td>
+</tr>
+</tbody>
+</table></div>
+<p>Clear mode removes <strong>notes only</strong>. Velocity, gate, probability, mutes and loop ranges stay. A held note that covers a cleared step is shortened. Other pad presses are ignored while clear mode is on. Click <strong>CLR</strong> again to cancel.</p>
+<h3 id="key-mode">Key mode<a class="pl" href="#key-mode" aria-label="Link to this section">#</a></h3>
+<p>Key mode turns both pads into the same keyboards, so you can play the selected track's sound by hand. Press <strong>Mode</strong>, then <strong>Vel</strong> (labelled <strong>Key</strong>). Repeat to leave.</p>
+<ul>
+<li>Only the selected track is affected: its sequencer is switched off (its settings are kept) while all other tracks keep playing. Play / Stop still works. The mode belongs to the track and is saved with the session: each track is either in Key mode or in sequencer mode, and choosing a track with T1–T4 switches the pads to that track's mode.</li>
+<li>Each pad shows <strong>four keyboards of two rows</strong> covering four octaves from the bottom up: white keys in the lower row (C D E F G A B C), black keys in the upper row above D, E, G, A and B (C♯, D♯, F♯, G♯, A♯, each one column to the right of its natural note; only on the Chromatic scale). The <strong>second keyboard from the bottom</strong> is the track's octave and is drawn in the track colour. Root keys are green (bright track colour in the current octave).</li>
+<li>On a <strong>diatonic scale</strong> (or any scale except Chromatic) each keyboard is <strong>one row of scale notes starting with the root at the left</strong>; the upper row stays dark. On the <strong>Drums</strong> scale each pad becomes eight large drum pads, each four note pads wide and two high, in their own colours: lowest drum at the bottom left, highest at the top right (Pad A and Pad B show the same pads). A Pad A drum pad sounds while held. A Pad B drum pad is <strong>retriggered in time with the track's step speed</strong> (tempo and Tempo ÷) for as long as it is held; while the sequencer plays, the hits fall on its steps, otherwise they follow the BPM. The Oct buttons shift the drum notes. On the Chromatic scale the piano layout follows the Root.</li>
+<li><strong>Pad A</strong>: a note sounds as long as you hold the key. <strong>Pad B</strong>: keys are <strong>latched</strong>; press once to start a note, again to stop it. <strong>Velocity</strong> is set with the Pad B right column, which becomes a slider from 10 to 127 (default 100, each track keeps its own value). On the Drums scale Pad B does not latch (see above).</li>
+<li><strong>Vel</strong> (labelled <strong>Drum</strong> or <strong>Keys</strong> in Key mode) toggles between the keyboard and the drum pad layout. Drums scale tracks start with drum pads and flip to a piano keyboard; all other scales start with keyboards and flip to drum pads that play the scale's notes from the root (the eight lanes: C D E F G A B C on Chromatic), lowest at the bottom left. Only on the Drums scale do the pads use General MIDI drum notes. The choice is saved per track. To leave Key mode press <strong>Mode</strong>, then <strong>Vel</strong>.</li>
+<li>The <strong>top row of the grid</strong> shows where the track's silent sequencer is: the playhead moves along it as a <strong>red LED</strong> (steps 1–8 on Pad A, 9–16 on Pad B) while the sequencer is playing.</li>
+<li>Notes go to the track's channel and instrument output. <strong>Mute</strong> works as usual: press Mute, then T1–T4 to mute or unmute tracks (a muted track's keyboard is silent too). <strong>Oct−</strong> and <strong>Oct+</strong> change the track octave directly. <strong>Scale</strong> and <strong>Root</strong> buttons (Pad B top row) and the on-screen dropdowns work as usual. Notes stop when the track, scale, root, octave, channel or output changes, and when you leave Key mode. Other buttons are dark and do nothing.</li>
+</ul>
+<h3 id="randomize">Randomize<a class="pl" href="#randomize" aria-label="Link to this section">#</a></h3>
+<p><strong>RND</strong> replaces the selected track with a random pattern (fewer notes on melodic tracks, a little more on drums).</p>
+<h3 id="swap-pads">Swap pads<a class="pl" href="#swap-pads" aria-label="Link to this section">#</a></h3>
+<p>Press <strong>top row button 7</strong> on either pad to swap their roles. The pad that showed steps 1–8 then shows steps 9–16, and the other way round, together with their controls. Press it again to swap back.</p>
+<hr />
+<h2 id="7-saving-and-sync">7. Saving and sync<a class="pl" href="#7-saving-and-sync" aria-label="Link to this section">#</a></h2>
+<h3 id="saving">Saving<a class="pl" href="#saving" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><strong>Automatic:</strong> all settings, tracks and sequences are saved in the browser a moment after every change and restored when the page opens. If you were connected to MIDI, it reconnects.</li>
+<li><strong>To a file:</strong> <strong>Save All</strong> downloads MIDI settings and patterns (<code>twin-pad-all.json</code>), <strong>Save MIDI</strong> only the MIDI settings (<code>twin-pad-midi.json</code>: devices, Launchpad models, clock input, external clock, the drum map, and each track's output and channel) and <strong>Save Ptn</strong> only the patterns (<code>twin-pad-patterns.json</code>: everything else, including tempo, length and root). One <strong>Load</strong> button loads any of these files, and only the settings found in the file are changed. Use this for backups and for moving between computers, because the automatic copy belongs to one browser and one way of opening the page.</li>
+<li><strong>Not saved:</strong> whether it is playing, the current mode or view, and the whole-app mute.</li>
+</ul>
+<h3 id="external-clock-and-start--stop">External clock and start / stop<a class="pl" href="#external-clock-and-start--stop" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><strong>Start and stop</strong> messages from the <strong>Clock input</strong> device always control the sequencer: Start restarts from step 1, Continue resumes, Stop stops.</li>
+<li>Click the <strong>External clock</strong> button to make the tempo follow the MIDI clock from that device. The BPM field is locked and shows the measured tempo. Switching external clock on or off stops playback. If no clock input is selected the status line asks you to pick one.</li>
+<li>With external clock on, pressing Play waits for the next clock tick.</li>
+</ul>
+<hr />
+<h2 id="8-troubleshooting">8. Troubleshooting<a class="pl" href="#8-troubleshooting" aria-label="Link to this section">#</a></h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>What to check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No MIDI inputs and outputs listed</td>
+<td>Use a Chromium based Browser (Chrome or Edge). Allow MIDI and SysEx when asked. Reconnect the Launchpads and click <strong>Connect MIDI</strong> again.</td>
+</tr>
+<tr>
+<td>Pads stay dark or behave oddly</td>
+<td>Use the <strong>MIDI</strong> port, not the <strong>DAW</strong> port (automatic setup avoids DAW ports, but a port you chose by hand is used as is). Check the <strong>model</strong> dropdown.</td>
+</tr>
+<tr>
+<td>The grid works on screen but not on the pads (or the reverse)</td>
+<td>The input and output of a pad are separate selectors. Set both.</td>
+</tr>
+<tr>
+<td>Notes play on screen but you hear nothing</td>
+<td>Pick an <strong>Instrument output</strong> for that track (it is set per track). Check the track's <strong>Channel</strong>, the whole-app mute (red Play button), and that the synth listens on that channel.</td>
+</tr>
+<tr>
+<td>Steps 9–16 do nothing</td>
+<td>The <strong>Length</strong> may be shorter than 16, or the pads may be swapped.</td>
+</tr>
+<tr>
+<td>A lane stays silent</td>
+<td>It may be muted (Mute mode shows red), or in a random mode its loop range may not contain the playhead.</td>
+</tr>
+<tr>
+<td>Bottom-row pads do not toggle notes</td>
+<td>Jump is on for the track (cyan bottom row). Press <strong>Mode</strong>, then <strong>Gate</strong> to switch it off.</td>
+</tr>
+<tr>
+<td>A track plays slower than the others</td>
+<td>Its <strong>Tempo ÷</strong> is above 1.</td>
+</tr>
+<tr>
+<td>The pads show keyboards, the track is silent</td>
+<td>Key mode is on for that track. Press <strong>Mode</strong>, then <strong>Vel</strong> to leave it.</td>
+</tr>
+<tr>
+<td>Tempo does not change</td>
+<td><strong>External clock</strong> is on and locks the BPM field.</td>
+</tr>
+<tr>
+<td>Settings are gone after reopening</td>
+<td>The page was opened differently (disk versus <code>localhost</code>) or the browser data was cleared. Use <strong>Save</strong> for backups.</td>
+</tr>
+<tr>
+<td>Colours look different on a Launchpad</td>
+<td>The original Launchpad (X-Y and Drum Mode) has only red and green. The Pro uses a lower colour resolution.</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="9-reference">9. Reference<a class="pl" href="#9-reference" aria-label="Link to this section">#</a></h2>
+<h3 id="91-defaults-and-limits">9.1 Defaults and limits<a class="pl" href="#91-defaults-and-limits" aria-label="Link to this section">#</a></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tempo</td>
+<td>120 BPM</td>
+<td>30–300</td>
+</tr>
+<tr>
+<td>Sequence length</td>
+<td>16 steps</td>
+<td>1–16</td>
+</tr>
+<tr>
+<td>Velocity per step</td>
+<td>100</td>
+<td>1–127</td>
+</tr>
+<tr>
+<td>Gate length per step</td>
+<td>50%</td>
+<td>1–100%</td>
+</tr>
+<tr>
+<td>Probability per step</td>
+<td>100%</td>
+<td>0–100%</td>
+</tr>
+<tr>
+<td>Octave per track</td>
+<td>0 (track 2: +1, track 3: −1)</td>
+<td>−3 to +3</td>
+</tr>
+<tr>
+<td>Channel</td>
+<td>Track 1: 1, track 2: 2, track 3: 3, track 4: 10</td>
+<td>1–16</td>
+</tr>
+<tr>
+<td>Tempo divider</td>
+<td>1 (every step)</td>
+<td>1–16</td>
+</tr>
+<tr>
+<td>Instrument output</td>
+<td>First port that is not a Launchpad (per track)</td>
+<td>any MIDI output or none</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>Minor pentatonic (track 4: Drums)</td>
+<td>see <a href="#94-scales">9.4</a></td>
+</tr>
+<tr>
+<td>Root</td>
+<td>C</td>
+<td>C to B</td>
+</tr>
+<tr>
+<td>Stepping mode</td>
+<td>Forward</td>
+<td>5 modes</td>
+</tr>
+<tr>
+<td>Jump</td>
+<td>Off</td>
+<td>on / off per track</td>
+</tr>
+<tr>
+<td>Launchpad model</td>
+<td>LP Mini MK3</td>
+<td>5 choices</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="92-hardware-buttons">9.2 Hardware buttons<a class="pl" href="#92-hardware-buttons" aria-label="Link to this section">#</a></h3>
+<p>Numbers count from the left (top rows) or from the top (right columns). Labels in brackets are the on-screen labels.</p>
+<p><strong>Pad A top row</strong>
+| # | Button | Function |
+|---|---|---|
+| 1 | Play / Stop | Start or stop. In mute mode: whole-app mute. In clear mode: clear everything. |
+| 2 | Mute | Toggle mute mode |
+| 3 | Len− | Shorten the sequence by one step |
+| 4 | Len+ | Lengthen the sequence by one step |
+| 5 | Oct− | Arm octave down (press again to cancel); then choose a note, lane or track |
+| 6 | Oct+ | Arm octave up (press again to cancel); then choose a note, lane or track |
+| 7 | Swap | Swap the two pads |
+| 8 | Extend | Extend a note |</p>
+<p><strong>Pad B top row</strong>
+| # | Button | Function |
+|---|---|---|
+| 1 | BPM− | Tempo −5. After Mode: tempo divider mode. |
+| 2 | BPM+ | Tempo +5. After Mode: tempo divider mode. |
+| 3 | Scale◀ | Previous scale (selected track). After Mode: pattern view. |
+| 4 | Scale▶ | Next scale (selected track). After Mode: pattern view. |
+| 5 | Root− (♭ on Chromatic) | Root down one semitone. On a Chromatic track: toggle flat mode. After Mode: root of the selected track only. |
+| 6 | Root+ (♯ on Chromatic) | Root up one semitone. On a Chromatic track: toggle sharp mode. After Mode: root of the selected track only. |
+| 7 | Swap | Swap the two pads |
+| 8 | Extend | Extend a note |</p>
+<p><strong>Pad A right column</strong>
+| # | Label | Normal function | During stepping selection |
+|---|---|---|---|
+| 1 | T1 | Select track 1 | Forward |
+| 2 | T2 | Select track 2 | Reverse |
+| 3 | T3 | Select track 3 | Ping-pong |
+| 4 | T4 | Select track 4 | Random |
+| 5 | Prob | Open or close the probability view | Random walk |
+| 6 | Gate | Open or close the gate view | Jump on / off |
+| 7 | Vel | Open or close the velocity view. In Key mode: toggle keyboard / drum pad layout. | Key mode on / off |
+| 8 | Mode | Start stepping mode selection | Cancel |</p>
+<p>In mute mode the track buttons mute tracks, and in clear mode they clear tracks.</p>
+<p><strong>Pad B right column:</strong> one button per lane, lane 8 at the top and lane 1 at the bottom. On screen each button is labelled with the note name of its lane for the selected track (for example C, Eb, F#, Bb, without the octave), and the labels follow the scale, root and octave. On the Drums scale they show the pitch class of the drum note, or the two-letter label when a custom drum map is loaded.
+| Situation | Function |
+|---|---|
+| Normal | Set the lane's loop start and end (see <a href="#loops-per-lane-polymetric-patterns">Loops per lane</a>) |
+| Mute mode | Mute or unmute the lane |
+| Stepping selection | Select the lane for its own stepping mode |
+| Clear mode | Clear the lane |
+| Velocity, gate or probability view | Master slider: set all steps to the button's level |
+| Sharp or flat mode (Chromatic) | Sharpen or flatten every note of the lane |
+| Key mode | Velocity slider for the keyboard: 10 to 127, default 100 |</p>
+<p><strong>Note grid (both pads):</strong> normally toggles notes. In the velocity, gate and probability views it sets the step's value. With Jump on, a held bottom-row pad holds the track on that step. In tempo divider mode the top four rows are one divider slider per track. In mute and clear mode the bottom row selects a step, and the other rows are ignored in clear mode. In Key mode both grids are keyboards (see <a href="#key-mode">Key mode</a>).</p>
+<h3 id="93-on-screen-controls">9.3 On-screen controls<a class="pl" href="#93-on-screen-controls" aria-label="Link to this section">#</a></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Connect MIDI</td>
+<td>Ask for MIDI access</td>
+</tr>
+<tr>
+<td>Pad A / B input, output, model</td>
+<td>Devices and Launchpad models</td>
+</tr>
+<tr>
+<td>Clock input</td>
+<td>Source of MIDI clock and start / stop</td>
+</tr>
+<tr>
+<td>Drum map: Load / Default</td>
+<td>Load a custom drum map file, or return to the default map
+</tr>
+<tr>
+<td>BPM</td>
+<td>Tempo. Locked and showing the measured tempo with external clock.</td>
+</tr>
+<tr>
+<td>External clock</td>
+<td>Follow incoming MIDI clock</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>Sequence length</td>
+</tr>
+<tr>
+<td>Save All / Save MIDI / Save Ptn / Load</td>
+<td>Session files: both, MIDI settings only, patterns only; Load reads whichever fields a file contains</td>
+</tr>
+<tr>
+<td>Scale</td>
+<td>Scale of the selected track</td>
+</tr>
+<tr>
+<td>Root</td>
+<td>Root note (shows the selected track's; moves all tracks together)</td>
+</tr>
+<tr>
+<td>Octave</td>
+<td>Octave of the selected track (dropdown)</td>
+</tr>
+<tr>
+<td>Tempo ÷</td>
+<td>Tempo divider of the selected track</td>
+</tr>
+<tr>
+<td>Instrument output</td>
+<td>MIDI output of the selected track</td>
+</tr>
+<tr>
+<td>Oct− / Oct+</td>
+<td>Arm octave down/up, then choose a note pad, lane button or track button</td>
+</tr>
+<tr>
+<td>Channel</td>
+<td>MIDI channel of the selected track</td>
+</tr>
+<tr>
+<td>CLR</td>
+<td>Clear mode</td>
+</tr>
+<tr>
+<td>RND</td>
+<td>Randomize the selected track</td>
+</tr>
+<tr>
+<td>On-screen top rows, logo cells and right columns</td>
+<td>Same as the hardware</td>
+</tr>
+<tr>
+<td>Velocity, gate and probability sliders</td>
+<td>Exact values, drawable across steps</td>
+</tr>
+<tr>
+<td>Master slider (beside Pad B in the slider views)</td>
+<td>Sets all steps of the selected track to one value</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="94-scales">9.4 Scales<a class="pl" href="#94-scales" aria-label="Link to this section">#</a></h3>
+<p>Intervals are semitones above the root. Eight lanes run from the bottom up and continue in the next octave when a scale has fewer than 8 notes. Sessions saved with an older version of the Chromatic scale (one lane per semitone) now play the new C-major-based lanes.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Scale</th>
+<th>Intervals</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Minor pentatonic</td>
+<td>0 3 5 7 10</td>
+</tr>
+<tr>
+<td>Major pentatonic</td>
+<td>0 2 4 7 9</td>
+</tr>
+<tr>
+<td>Ionian (major)</td>
+<td>0 2 4 5 7 9 11</td>
+</tr>
+<tr>
+<td>Dorian</td>
+<td>0 2 3 5 7 9 10</td>
+</tr>
+<tr>
+<td>Phrygian</td>
+<td>0 1 3 5 7 8 10</td>
+</tr>
+<tr>
+<td>Lydian</td>
+<td>0 2 4 6 7 9 11</td>
+</tr>
+<tr>
+<td>Mixolydian</td>
+<td>0 2 4 5 7 9 10</td>
+</tr>
+<tr>
+<td>Aeolian (natural minor)</td>
+<td>0 2 3 5 7 8 10</td>
+</tr>
+<tr>
+<td>Locrian</td>
+<td>0 1 3 5 6 8 10</td>
+</tr>
+<tr>
+<td>Chromatic</td>
+<td>0 2 4 5 7 9 11 (like Ionian; single notes can be sharpened or flattened, see <a href="#chromatic-scale-sharps-and-flats">section 5</a>)</td>
+</tr>
+<tr>
+<td>Drums</td>
+<td>see <a href="#95-drum-map-drums-scale-bottom-lane-to-top-lane">9.5</a></td>
+</tr>
+</tbody>
+</table></div>
+<p>The lowest lane is note 48 (C3) plus the root and 12 per octave, and results are limited to 0–127. In every scale except Drums, lanes on a scale degree 0 are the root lanes.</p>
+<h3 id="95-drum-map-drums-scale-bottom-lane-to-top-lane">9.5 Drum map (Drums scale, bottom lane to top lane)<a class="pl" href="#95-drum-map-drums-scale-bottom-lane-to-top-lane" aria-label="Link to this section">#</a></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Lane</th>
+<th>Note</th>
+<th>Sound</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>36</td>
+<td>Bass drum</td>
+</tr>
+<tr>
+<td>2</td>
+<td>38</td>
+<td>Snare</td>
+</tr>
+<tr>
+<td>3</td>
+<td>42</td>
+<td>Closed hi-hat</td>
+</tr>
+<tr>
+<td>4</td>
+<td>46</td>
+<td>Open hi-hat</td>
+</tr>
+<tr>
+<td>5</td>
+<td>39</td>
+<td>Hand clap</td>
+</tr>
+<tr>
+<td>6</td>
+<td>41</td>
+<td>Low floor tom</td>
+</tr>
+<tr>
+<td>7</td>
+<td>47</td>
+<td>Low-mid tom</td>
+</tr>
+<tr>
+<td>8</td>
+<td>49</td>
+<td>Crash cymbal</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="96-stepping-modes">9.6 Stepping modes<a class="pl" href="#96-stepping-modes" aria-label="Link to this section">#</a></h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Forward</td>
+<td>Low to high step, then back to the start of the range</td>
+</tr>
+<tr>
+<td>Reverse</td>
+<td>High to low step, then back to the end of the range</td>
+</tr>
+<tr>
+<td>Ping-pong</td>
+<td>Up and down, without repeating the end steps</td>
+</tr>
+<tr>
+<td>Random</td>
+<td>One random step per tick for the whole track, over the full length</td>
+</tr>
+<tr>
+<td>Random walk</td>
+<td>One step up or down per tick for the whole track, wrapping at the ends, starting at step 1</td>
+</tr>
+</tbody>
+</table></div>
+<p>Forward, reverse and ping-pong run per lane, within the lane's loop range and the overall length. In the two random modes a lane plays only when the track's step lies inside its loop range. A lane with its own mode always follows that mode.</p>
+<p>Jump is a per-track switch on top of the stepping mode. A held bottom-row pad keeps the track on that step; lanes whose loop range does not contain it ignore it, and the mode continues from the new position.</p>
+<h3 id="97-timing-and-midi-output">9.7 Timing and MIDI output<a class="pl" href="#97-timing-and-midi-output" aria-label="Link to this section">#</a></h3>
+<ul>
+<li><strong>Resolution:</strong> one step is a 16th note. At tempo <em>T</em> a step lasts 15000 / <em>T</em> milliseconds.</li>
+<li><strong>Tempo divider:</strong> a track with divider <em>N</em> plays one step every <em>N</em> steps, so its step lasts <em>N</em> × 15000 / <em>T</em> milliseconds. Gate length and held notes use that longer step.</li>
+<li><strong>Output:</strong> every track sends to its own instrument output.</li>
+<li><strong>Scheduling:</strong> notes are scheduled ahead with Web MIDI timestamps for steady timing.</li>
+<li><strong>Note on:</strong> channel = the track's channel, note = lane pitch, velocity = the step's velocity.</li>
+<li><strong>Note off:</strong> single-step notes end at the gate share of the step, but at least 1 ms before the next step. Held notes end 0.1 step before the end of their last step.</li>
+<li><strong>Whole-app mute and stop:</strong> send all-notes-off (CC 123) on the channels in use.</li>
+<li><strong>External clock:</strong> 24 pulses per quarter note, 6 pulses per step. The tempo shown is measured from the pulses.</li>
+</ul>
+<h3 id="98-led-colours">9.8 LED colours<a class="pl" href="#98-led-colours" aria-label="Link to this section">#</a></h3>
+<p>LED colours are the same on screen and on every Launchpad (reduced to the pad's capabilities).</p>
+<p><strong>Note grid</strong>
+| Look | Meaning |
+|---|---|
+| Track colour (amber, cyan, magenta, lime) | A note |
+| White | A note under the playhead, or the selected note in extend mode |
+| Dim grey | Playhead on an empty step |
+| Dimmer track colour | A held-note continuation, or a muted lane or step |
+| Magenta | A note with a per-note octave override |
+| Lighter or darker track colour | A sharpened or flattened note (Chromatic scale) |
+| Very dark green | A root lane |
+| Very dark blue | Inside a custom lane loop range |
+| Brighter blue | First and last step of a custom lane loop range |
+| Dark or faded | Beyond the sequence length |
+| Orange (bottom row) | Clear-step targets |
+| Cyan (bottom row) | Jump targets (Jump on) |
+| Track colour bars (top four rows) | Tempo divider mode: a bar up to the divider, brightest at the value |
+| Red or green (bottom row) | Muted or active steps in mute mode |
+| Dim blue-grey, dark (Key mode) | White keys and black keys; the current octave in the track colour; root keys green; a sounding key white |
+| Red, top grid row (Key mode) | Playhead of the track's sequencer |</p>
+<p><strong>Top rows</strong>
+| Button | Colours |
+|---|---|
+| Play | Dim green (stopped), green (playing), red (whole-app mute), orange (clear mode) |
+| Mute | Dim yellow, red when mute mode is on |
+| Len−, Len+, BPM−, BPM+ | Blue |
+| Oct−, Oct+ | Teal |
+| Scale◀, Scale▶ | Amber |
+| Root−, Root+ | Purple. On a Chromatic track: ♭ is dim blue (bright blue in flat mode), ♯ is dim orange (bright orange in sharp mode). |
+| Swap | Dim orange, bright when swapped |
+| Extend | Dim teal, bright teal when armed |
+| BPM−, BPM+ (Pad B) | Yellow after Mode is pressed (press to enter tempo divider mode), cyan while in it |
+| Logo | Dim red (Pad A role), dim green (Pad B role) |</p>
+<p><strong>Right columns</strong>
+| Button | Colours |
+|---|---|
+| T1–T4 | Track colour, bright when selected. Red for muted tracks in mute mode, orange in clear mode. |
+| Stepping selection | Mode colours (forward green, reverse orange, ping-pong blue, random magenta, random walk yellow), brightest for the current mode |
+| Mode | Dim yellow-green, bright while the stepping selection is open |
+| Prob | Dim green, bright green when the view is open |
+| Gate | Dim blue, brighter when the view is open. In stepping selection: dim cyan (Jump off), bright cyan (Jump on) |
+| Vel | Dim orange, bright orange when the view is open. In stepping selection: Key, dim teal (bright while Key mode is on) |
+| Pad B lanes | Dim blue; blue for a custom loop; white while setting a loop; green or red in mute mode; mode colours in stepping selection; orange in clear mode |</p>
+<h3 id="99-launchpad-protocols">9.9 Launchpad protocols<a class="pl" href="#99-launchpad-protocols" aria-label="Link to this section">#</a></h3>
+<p>Numbers are the layout used internally: grid 11–88, top row 91–98, right column 19–89, logo 99.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Startup</th>
+<th>LED messages</th>
+<th>Input</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LP Mini MK3</td>
+<td>SysEx ID 0D: Programmer mode</td>
+<td>One RGB SysEx, 0–127 per colour</td>
+<td>Grid notes, edge buttons as CC or note</td>
+</tr>
+<tr>
+<td>LP X</td>
+<td>SysEx ID 0C: Programmer mode</td>
+<td>Same as the Mini MK3</td>
+<td>Same as the Mini MK3</td>
+</tr>
+<tr>
+<td>LP Pro / Pro MK2</td>
+<td>SysEx ID 10: Programmer layout</td>
+<td>RGB SysEx, 0–63 per colour, 40 LEDs per message</td>
+<td>Same numbering</td>
+</tr>
+<tr>
+<td>LP X-Y Mode</td>
+<td>Reset, then layout 1 (<code>B0 00 00</code>, <code>B0 00 01</code>)</td>
+<td>Note On or CC with a red/green velocity code, changed LEDs only</td>
+<td>Grid note = row × 16 + column (top row first), right column notes 8, 24 … 120, top row CC 68h–6Fh (104–111)</td>
+</tr>
+<tr>
+<td>LP Drum Mode</td>
+<td>Reset, then layout 2 (<code>B0 00 00</code>, <code>B0 00 02</code>)</td>
+<td>Same as X-Y Mode</td>
+<td>Drum-rack grid notes 36–99 in four 4×4 blocks (36 bottom left, 52 top left, 68 bottom right, 84 top right; each block counts up from its bottom left), right column notes 100–107 (top to bottom), top row CC 68h–6Fh</td>
+</tr>
+</tbody>
+</table></div>
+<p>When the page closes, or when you change a pad's model, the pad is returned to its normal mode.</p>
+<h3 id="910-session-file">9.10 Session file<a class="pl" href="#910-session-file" aria-label="Link to this section">#</a></h3>
+<p><code>twin-pad-all.json</code>, <code>twin-pad-midi.json</code> and <code>twin-pad-patterns.json</code> are plain JSON with the same fields, split in two groups. MIDI: <code>conn</code>, <code>sync</code>, <code>models</code>, <code>devs</code>, <code>dmap</code> and per track <code>ch</code> and <code>so</code>. Patterns: everything else. A file contains only the group it was saved for.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bpm</code>, <code>root</code>, <code>sel</code>, <code>len</code></td>
+<td>Tempo, root note (0–11), selected track (0–3), sequence length</td>
+</tr>
+<tr>
+<td><code>sync</code>, <code>swap</code></td>
+<td>External clock and swap state</td>
+</tr>
+<tr>
+<td><code>models</code></td>
+<td>Launchpad models of pad A and B (<code>mk3</code>, <code>x</code>, <code>pro</code>, <code>xy</code>, <code>drum</code>)</td>
+</tr>
+<tr>
+<td><code>devs</code></td>
+<td>Chosen devices (ID and name per selector)</td>
+</tr>
+<tr>
+<td><code>conn</code></td>
+<td>Whether to reconnect MIDI on load</td>
+</tr>
+<tr>
+<td><code>dmap</code></td>
+<td>Custom drum map (<code>name</code> and <code>lanes</code> with <code>lane</code>, <code>label</code>, <code>note</code>, <code>channel</code>), or null for the default
+</tr>
+<tr>
+<td><code>tracks[]</code></td>
+<td>Four tracks, each with the fields below</td>
+</tr>
+</tbody>
+</table></div>
+<p>Track fields: <code>scale</code>, <code>oct</code>, <code>ch</code>, <code>mute</code>, <code>so</code> (instrument output: ID and name, or null if never chosen), <code>div</code> (tempo divider 1–16), <code>rs</code> (root shift of this track, 0–11 semitones, added to the global root), <code>jmp</code> (Jump on or off), <code>pi</code> (active pattern 0–7), <code>pats</code> (8 stored patterns, null = empty), <code>km</code> (Key mode on or off), <code>kv</code> (Key mode velocity, 10–127), <code>lvel</code>, <code>lgate</code>, <code>lprob</code> (per-lane values, lane × 16 + step) with <code>fvel</code>, <code>fgate</code>, <code>fprob</code> (8 flags: the lane uses its own values), <code>no</code> (128 per-note octave offsets, lane × 16 + step), <code>loct</code> (8 per-lane octave offsets), <code>dir</code> (stepping mode 0–4), <code>ldir</code> (8 lane overrides, −1 = follow the track), <code>g</code> (16 step bitmasks, one bit per lane), <code>acc</code> (128 accidentals per note, −1 flat, 0 natural, +1 sharp, lane × 16 + step), <code>ln</code> (128 held-note lengths, lane × 16 + step), <code>vel</code>, <code>gate</code> and <code>prob</code> (16 values each), <code>sm</code> (16 step mutes), <code>lm</code> (8 lane mutes), <code>lo</code> and <code>hi</code> (8 lane loop starts and ends).</p>
+<p>Files from older versions load with defaults for anything that did not exist yet.</p>
+</main>
+</div>
+</details>
+</body>
+</html>

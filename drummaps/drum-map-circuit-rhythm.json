@@ -1,0 +1,13 @@
+{
+  "name": "Circuit Rhythm",
+  "lanes": [
+    { "lane": 1, "label": "T1", "note": 60, "channel": 1 },
+    { "lane": 2, "label": "T2", "note": 60, "channel": 2 },
+    { "lane": 3, "label": "T3", "note": 60, "channel": 3 },
+    { "lane": 4, "label": "T4", "note": 60, "channel": 4 },
+    { "lane": 5, "label": "T5", "note": 60, "channel": 5 },
+    { "lane": 6, "label": "T6", "note": 60, "channel": 6 },
+    { "lane": 7, "label": "T7", "note": 60, "channel": 7 },
+    { "lane": 8, "label": "T8", "note": 60, "channel": 8 }
+  ]
+}
