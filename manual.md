@@ -218,6 +218,28 @@ Every track has **8 patterns**. A pattern holds everything of the track (notes, 
 
 Bright = active, flashing = cued, dim = contains notes. T1–T4 and Play work in pattern view; any other button leaves it. Patterns are saved with the session.
 
+### Drum maps
+
+A drum map defines what each of the 8 lanes of a track on the **Drums** scale plays. The built-in map is the General MIDI map in [9.5](#95-drum-map-drums-scale-bottom-lane-to-top-lane). To use your own, write a JSON file and click **Load** next to *Drum map* in the MIDI devices section. **Default** returns to the built-in map.
+
+```json
+{
+  "name": "My kit",
+  "lanes": [
+    { "lane": 1, "label": "BD", "note": 36, "channel": null },
+    { "lane": 2, "label": "SD", "note": 38, "channel": 10 }
+  ]
+}
+```
+
+- **lane**: 1 (bottom) to 8 (top).
+- **label**: up to two characters, shown on the Pad B lane buttons (on screen) while a Drums-scale track is selected. Without a map those buttons show the note name.
+- **note**: MIDI note 0–127.
+- **channel**: MIDI channel 1–16. Leave it empty (`null`, `""` or omit it) to use the track's own channel.
+- Lanes missing from the file keep the default. A file with an error is rejected and the status line says why.
+
+The map applies to **every track set to Drums**, to the sequencer and to the Key mode drum pads (including their channels). Octave offsets still apply to the mapped notes. The map is saved with the MIDI settings (**Save All** and **Save MIDI**); the complete map is stored in the session file, so the original map file is not needed later. An example with the default map is `drum-map-default.json`.
+
 ------------------------------------------------------------------------
 
 ## 6. Performance tools
@@ -275,7 +297,7 @@ Press **top row button 7** on either pad to swap their roles. The pad that showe
 ### Saving
 
 - **Automatic:** all settings, tracks and sequences are saved in the browser a moment after every change and restored when the page opens. If you were connected to MIDI, it reconnects.
-- **To a file:** **Save All** downloads MIDI settings and patterns (`twin-pad-all.json`), **Save MIDI** only the MIDI settings (`twin-pad-midi.json`: devices, Launchpad models, clock input, external clock, and each track's output and channel) and **Save Ptn** only the patterns (`twin-pad-patterns.json`: everything else, including tempo, length and root). One **Load** button loads any of these files, and only the settings found in the file are changed. Use this for backups and for moving between computers, because the automatic copy belongs to one browser and one way of opening the page.
+- **To a file:** **Save All** downloads MIDI settings and patterns (`twin-pad-all.json`), **Save MIDI** only the MIDI settings (`twin-pad-midi.json`: devices, Launchpad models, clock input, external clock, the drum map, and each track's output and channel) and **Save Ptn** only the patterns (`twin-pad-patterns.json`: everything else, including tempo, length and root). One **Load** button loads any of these files, and only the settings found in the file are changed. Use this for backups and for moving between computers, because the automatic copy belongs to one browser and one way of opening the page.
 - **Not saved:** whether it is playing, the current mode or view, and the whole-app mute.
 
 ### External clock and start / stop
@@ -371,7 +393,7 @@ Numbers count from the left (top rows) or from the top (right columns). Labels i
 
 In mute mode the track buttons mute tracks, and in clear mode they clear tracks.
 
-**Pad B right column:** one button per lane, lane 8 at the top and lane 1 at the bottom. On screen each button is labelled with the note name of its lane for the selected track (for example C, Eb, F#, Bb, without the octave), and the labels follow the scale, root and octave. On the Drums scale they show the pitch class of the drum note.
+**Pad B right column:** one button per lane, lane 8 at the top and lane 1 at the bottom. On screen each button is labelled with the note name of its lane for the selected track (for example C, Eb, F#, Bb, without the octave), and the labels follow the scale, root and octave. On the Drums scale they show the pitch class of the drum note, or the two-letter label when a custom drum map is loaded.
 
 | Situation | Function |
 |---|---|
@@ -392,6 +414,7 @@ In mute mode the track buttons mute tracks, and in clear mode they clear tracks.
 | Connect MIDI                                     | Ask for MIDI access                                                                                 |
 | Pad A / B input, output, model                   | Devices and Launchpad models                                                                        |
 | Clock input                                      | Source of MIDI clock and start / stop                                                               |
+| Drum map: Load / Default | Load a custom drum map file, or return to the default map |
 | BPM                                              | Tempo. Locked and showing the measured tempo with external clock.                                   |
 | External clock                                   | Follow incoming MIDI clock                                                                          |
 | Length                                           | Sequence length                                                                                     |
@@ -535,7 +558,7 @@ When the page closes, or when you change a pad's model, the pad is returned to i
 
 ### 9.10 Session file
 
-`twin-pad-all.json`, `twin-pad-midi.json` and `twin-pad-patterns.json` are plain JSON with the same fields, split in two groups. MIDI: `conn`, `sync`, `models`, `devs` and per track `ch` and `so`. Patterns: everything else. A file contains only the group it was saved for.
+`twin-pad-all.json`, `twin-pad-midi.json` and `twin-pad-patterns.json` are plain JSON with the same fields, split in two groups. MIDI: `conn`, `sync`, `models`, `devs`, `dmap` and per track `ch` and `so`. Patterns: everything else. A file contains only the group it was saved for.
 
 | Field                       | Content                                                           |
 |-----------------------------|-------------------------------------------------------------------|
@@ -544,6 +567,7 @@ When the page closes, or when you change a pad's model, the pad is returned to i
 | `models`                    | Launchpad models of pad A and B (`mk3`, `x`, `pro`, `xy`, `drum`) |
 | `devs`                      | Chosen devices (ID and name per selector)                         |
 | `conn`                      | Whether to reconnect MIDI on load                                 |
+| `dmap` | Custom drum map (`name` and `lanes` with `lane`, `label`, `note`, `channel`), or null for the default |
 | `tracks[]`                  | Four tracks, each with the fields below                           |
 
 Track fields: `scale`, `oct`, `ch`, `mute`, `so` (instrument output: ID and name, or null if never chosen), `div` (tempo divider 1–16), `rs` (root shift of this track, 0–11 semitones, added to the global root), `jmp` (Jump on or off), `pi` (active pattern 0–7), `pats` (8 stored patterns, null = empty), `km` (Key mode on or off), `kv` (Key mode velocity, 10–127), `lvel`, `lgate`, `lprob` (per-lane values, lane × 16 + step) with `fvel`, `fgate`, `fprob` (8 flags: the lane uses its own values), `no` (128 per-note octave offsets, lane × 16 + step), `loct` (8 per-lane octave offsets), `dir` (stepping mode 0–4), `ldir` (8 lane overrides, −1 = follow the track), `g` (16 step bitmasks, one bit per lane), `acc` (128 accidentals per note, −1 flat, 0 natural, +1 sharp, lane × 16 + step), `ln` (128 held-note lengths, lane × 16 + step), `vel`, `gate` and `prob` (16 values each), `sm` (16 step mutes), `lm` (8 lane mutes), `lo` and `hi` (8 lane loop starts and ends).

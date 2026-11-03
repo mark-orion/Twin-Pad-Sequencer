@@ -1,8 +1,8 @@
 # Twin Pad Sequencer: current context
 
-Supersedes all earlier context files. Current as of the v05 session (2026-11-01): 8 patterns per track, the Key mode keyboard/drum pad layout toggle, per-lane velocity/gate/probability, and the split Save buttons (All, MIDI, Ptn) with partial Load. Earlier work: Pad A right column rearrangement and Jump (2026-10-30), per-track instrument output and tempo divider.
+Supersedes all earlier context files. Current as of the v06 session (2026-11-02): custom drum maps (see "Session changes (v06)"). Before that, the v05 session (2026-11-01): 8 patterns per track, the Key mode keyboard/drum pad layout toggle, per-lane velocity/gate/probability, and the split Save buttons (All, MIDI, Ptn) with partial Load. Earlier work: Pad A right column rearrangement and Jump (2026-10-30), per-track instrument output and tempo divider.
 
-Current deliverables from the latest change: `twin-pad-sequencer.html` (updated app) and the manual section of `index.html`. Keep the manual in sync with the app. Earlier versions are kept as numbered files.
+Current deliverables from the latest change: `twin-pad-sequencer.html` (updated app) the manual section of `index.html`, `manual.md` and the example `drum-map-default.json`. Keep the manual in sync with the app. Earlier versions are kept as numbered files.
 
 ## What it is
 `twin-pad-sequencer.html` is a single self-contained file with vanilla JS and no React. It is a web MIDI step sequencer driven by one or two Launchpads, or by mouse and touch alone, using the Web MIDI API with SysEx. Open it from disk or `localhost` in a Chromium based browser like Chrome or Edge and click **Connect MIDI**.
@@ -14,7 +14,7 @@ Working style the user wants: concise answers, small incremental changes, every 
 - **Per-track data:** `g[16]` (row bitmask), `ln[128]` (held-note lengths), `acc[128]` (accidental per note, −1/0/+1, index lane*16+step), `no[128]` (per-note octave offset, −3..+3, index lane*16+step), `lm[8]` (lane mute), `loct[8]` (per-lane octave offset, −3..+3), `sm[16]` (step mute), `lo/hi[8]` (lane loop range), `vel[16]` (default 100), `gate[16]` (default 50), `prob[16]` (default 100), `dir` (stepping mode 0–4), `ldir[8]` (per-lane override, −1 means inherit), plus `scale`, `oct`, `ch`, `mute`, **`so`** (instrument output of the track: `{id,name}`; `null` = never chosen, `{id:'',name:''}` = none), **`div`** (tempo divider 1–16, default 1) and `port` (resolved MIDIOutput, runtime only, not saved) and **`jmp`** (Jump switch, saved) and **`rs`** (per-track root shift 0–11, added to global `S.root`; effective root `eff(t)=(S.root+rs)%12`, used by `pitch`, saved).
 - **Global:** `bpm`, `root`, `sel`, `len`, `sync` (external clock), `swap`, `models` (Launchpad model of physical pad A and B), `devs` (device choices) and `conn`.
 - **Modes (not persisted):** `vv` (velocity view), `gv` (gate view), `pv` (probability view), `dm` with `dl` (stepping selection), `mm` (mute mode), `mall` (master mute), `ext` (extend note), `arm` (loop edit), `cm` (clear mode), `am` (accidental mode: +1 sharp, −1 flat, 0 off). They cancel each other (each mode button resets the others, `S.am=0` included). `render()` clears `am` when the selected track is not on Chromatic.
-- **Scales:** Minor/Major pentatonic, Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, **Chromatic** and Drums. Drum rows map to GM notes 36, 38, 42, 46, 39, 41, 47 and 49.
+- **Scales:** Minor/Major pentatonic, Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Locrian, **Chromatic** and Drums. Drum rows map to GM notes 36, 38, 42, 46, 39, 41, 47 and 49 unless a custom drum map is loaded (see v06).
 
 ## Chromatic scale (sharps and flats)
 - **Lanes:** Chromatic is `[0,2,4,5,7,9,11]`, so the lanes are C D E F G A B C (like Ionian) and follow the Root. Old sessions that used the former one-lane-per-semitone Chromatic now play these lanes.
@@ -161,3 +161,20 @@ Workflow as before: edits by Python scripts with unique-anchor asserts, then a `
 - Per-lane probability rolls separately per lane and step only for overridden lanes.
 - A lane view has no marker on the hardware beyond the grey master bar and the status line.
 - Pattern view uses the Mode/Scale combination; the Scale buttons keep their normal job otherwise.
+
+## Session changes (v06, 2026-11-02): custom drum maps
+Edits by Python scripts with unique-anchor asserts, then a `new Function()` syntax check. **Syntax checked only, nothing tested in a browser or on hardware.** Files delivered: `twin-pad-sequencer.html`, `index.html` (manual, titled v06 with a release note), `manual.md`, `drum-map-default.json` (example of the default map).
+
+- **File format:** `{"name":…,"lanes":[{"lane":1-8,"label":"BD","note":0-127,"channel":1-16|null},…]}`, beautified. Channel `null`, `""` or missing = the track's channel. Label is cut to 2 characters (empty = default label). Lanes missing from the file keep the default. Errors reject the file (status line shows the reason).
+- **State:** `S.dmap` is `null` (default) or `{name, m:[8 x {l,n,c}]}` with `c` 0–15 or null. Defaults: `DRUMS` notes and `DLB` labels BD SD CH OH CP LT MT CR (the default labels are my choice).
+- **Functions (after `cur`):** `dnote(r)` (mapped or default note), `dch(t,r)` (mapped channel or `t.ch`), `dmParse(x)` (file/session format to internal, throws on errors), `dmOut()` (internal to file format). Also `kch(t,step,r)` (Key mode drum pad channel), `dmSet(m,msg)` (silences all tracks with `allOff` and `kOff()`, sets the map, renders, persists).
+- **Applies to:** every track whose scale is Drums: `pitch` uses `dnote`; `sched` sends note-on/off on `dch(tr,r)` for Drums tracks; Key mode drum pads (`kbNote` uses `dnote`, `kOn`/`kRepStart` take a channel, `kHit` uses the entry's `e.ch`). On a non-Drums scale with the drum pad layout the pads use the track channel. Per-lane/per-note octave offsets still apply to the mapped notes. `allOff` sends CC 123 on the track channel and, for Drums tracks with a map, on every mapped channel.
+- **Labels:** `rightLbl` shows the map's label on the Pad B lane buttons when the selected track is on Drums and a map is loaded (not in the slider views or Key mode, which have their own labels). Without a map the note name is shown as before. No hardware text, LEDs only.
+- **UI:** in the MIDI devices grid (8th slot) a `.dmc` block: name `#dmname`, buttons `#dmload` (file input `#dmfile`) and `#dmdef` (back to default). `ui()` updates the name.
+- **Persistence:** `ser`: the MIDI group (`'midi'`, `'all'`, autosave) contains `dmap` (`dmOut()` or null). `apply`: if `'dmap' in d` then `S.dmap=d.dmap?dmParse(d.dmap):null` (a null resets to default; files without the field keep the current map; an invalid map makes the load fail with a message). Pattern files do not contain it. Pattern scale changes do not affect the map (it is global).
+- **Manual:** new "Drum maps" subsection in section 5 (also in the sidebar), plus features, saving, on-screen controls, lane label, `dmap` session field and release note v06 entries.
+
+### Open points added by v06
+- Untested: loading a map on real hardware, per-lane channels on a synth, Key mode drum pads with mapped channels, the Drum map control in the MIDI devices layout on phones.
+- A map applies globally; there is no per-track map or multiple stored maps.
+- Switching a track away from Drums while notes ring only silences the old channels on the next stop, mute or map change.
