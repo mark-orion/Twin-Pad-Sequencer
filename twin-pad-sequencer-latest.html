@@ -60,6 +60,7 @@ details p{margin:6px 0;color:var(--dim)}
 .cell.anc{box-shadow:inset 0 0 0 3px #fff}
 .cell.ml{opacity:.4}
 .cell.out{opacity:.25}
+.cell.fo{opacity:.2}
 .cell.smu{background:#0d3a1a}
 .cell.smm{background:#8a2222}
 .cell.cmt{background:#a0400a}
@@ -156,7 +157,7 @@ details p{margin:6px 0;color:var(--dim)}
 <p><b>Master slider (slider views):</b> in the velocity, gate and probability views the Pad B right column becomes a slider. Pressing one of its buttons sets ALL steps of the selected track to that level (in the probability view press the bottom button twice for 0%). The lit buttons show the average of the steps. On screen it is one vertical slider beside Pad B.</p>
 <p><b>Pad A right column, below Prob (Gate):</b> toggles the gate view (dim blue). Same layout as the velocity view: a column sets the gate length of the notes in that step, from 13% to 100% of the step (default 50%). Extended notes are not affected.</p>
 <p><b>Pad A right column, bottom button (Mode):</b> choose the stepping mode of the selected track. Press it, then press one of these once: Track 1 forward (default), Track 2 reverse, Track 3 ping-pong, Track 4 random, Prob random walk, Vel Key mode (press Mode again to cancel). Gate switches <b>Jump</b> on or off for the track: while it is on the bottom row glows cyan, and holding a bottom-row pad holds the track's playhead on that step (the step is replayed every tick) until you let go; then the stepping mode carries on from that step. Lanes whose loop range does not contain that step ignore it. Bottom-row pads do not toggle notes while Jump is on. Forward, reverse and ping-pong run every lane within its own start/end range. Random and random walk move a single playhead for the whole track (random walk steps one step up or down), and every lane plays that step if it is inside the lane's range. To set one lane only: press the stepping button, then a lane button (Pad B right column), then a mode button. That lane then follows its own mode (random modes move that lane alone). Choosing a mode for the whole track clears the lane settings.</p>
-<p><b>Key mode (Mode, then Vel):</b> the selected track stops playing its sequence (all its settings are kept; the other tracks keep running) and both pad grids become the same keyboards for the selected track, like the Launchpad Mini's default note layout: each of the four keyboards has two rows (white keys below, black keys above D E G A B, i.e. C♯ D♯ F♯ G♯ A♯ one column to the right of their natural note), covering four octaves from the bottom up. The second keyboard from the bottom is the track's octave and is drawn in the track colour. On a diatonic scale each keyboard is one row of scale notes starting at the root on the left. On the Drums scale each pad shows eight coloured drum pads (4×2 note pads each, lowest bottom left, highest top right), the same on both pads; Pad A drums sound while held, Pad B drums retrigger in step time (tempo and Tempo ÷) while held. Pad A keys sound while held; Pad B keys are latched (press again to stop). Velocity: the Pad B right column is a slider (10–127, default 100). The top row of the grid shows the track's sequencer playhead as a red LED. Play/Stop, Mute (muting tracks; a muted track's keyboard is silent), Oct−/Oct+ (direct), Scale and Root work, and T1–T4 switch tracks: each track keeps its own mode (keyboard or sequencer), so the pads change accordingly; Mode, then Vel leaves Key mode.</p>
+<p><b>Key mode (Mode, then Vel):</b> the selected track stops playing its sequence (all its settings are kept; the other tracks keep running) and both pad grids become the same keyboards for the selected track, like the Launchpad Mini's default note layout: each of the four keyboards has two rows (white keys below, black keys above D E G A B, i.e. C♯ D♯ F♯ G♯ A♯ one column to the right of their natural note), covering four octaves from the bottom up. The second keyboard from the bottom is the track's octave and is drawn in the track colour. On a diatonic scale each keyboard is one row of scale notes starting at the root on the left. On the Drums scale each pad shows eight coloured drum pads (4×2 note pads each, lowest bottom left, highest top right), the same on both pads; Pad A drums sound while held, Pad B drums retrigger in step time (tempo and Tempo ÷) while held. Pad A keys sound while held; Pad B keys are latched (press again to stop). Velocity: the Pad B right column is a slider (8 levels, 16–127, as the master velocity slider; default 100). The top row of the grid shows the track's sequencer playhead as a red LED. Play/Stop, Mute (muting tracks; a muted track's keyboard is silent), Oct−/Oct+ (direct), Scale and Root work, and T1–T4 switch tracks: each track keeps its own mode (keyboard or sequencer), so the pads change accordingly; Mode, then Vel leaves Key mode.</p>
 <p><b>Drum maps:</b> in MIDI devices, <i>Drum map: Load</i> reads a JSON file that sets, per drum lane, a two-letter label (shown on the Pad B lane buttons), the MIDI note and an optional MIDI channel (empty = the track's channel). It applies to every track on the Drums scale and is saved with the MIDI settings. <i>Default</i> returns to the built-in map.</p>
 <p><b>Pad B right column:</b> one button per note lane. Press it, then press a pad in that lane for the start step and another for the end step. Press the button again to cancel. Lanes with a custom loop show dark blue between start and end, with brighter blue at the start and end steps.</p>
 </details>
@@ -178,7 +179,7 @@ const SN=Object.keys(SCALES), DRUMS=[36,38,42,46,39,41,47,49];
 const NOTES=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
 const LBL=['C','C#','D','Eb','E','F','F#','G','Ab','A','Bb','B']; // short note names for the lane buttons
 const mk=(scale,oct,ch)=>({lvel:new Uint8Array(128).fill(100),lgate:new Uint8Array(128).fill(50),lprob:new Uint8Array(128).fill(100),fvel:new Uint8Array(8),fgate:new Uint8Array(8),fprob:new Uint8Array(8),kd:false,pats:Array(8).fill(null),pi:0,cue:-1,kv:100,km:false,rs:0,acc:new Int8Array(128),no:new Int8Array(128),loct:new Int8Array(8),dir:0,ldir:new Int8Array(8).fill(-1),prob:new Uint8Array(16).fill(100),g:new Uint8Array(16),vel:new Uint8Array(16).fill(100),gate:new Uint8Array(16).fill(50),sm:new Uint8Array(16),ln:new Uint8Array(128),lm:new Uint8Array(8),lo:new Uint8Array(8),hi:new Uint8Array(8).fill(15),scale,oct,ch,mute:false,so:null,port:null,div:1,jmp:false});
-const S={dmap:null,vl:null,pm:false,pcp:false,tdm:false,am:0,pv:false,models:['mk3','mk3'],cm:false,dl:null,dm:false,gv:false,vv:false,swap:false,mm:false,mall:false,len:16,ext:null,sync:false,devs:{},conn:false,mh:false,bpm:120,playing:false,hd:null,arm:null,sel:0,root:0,tracks:[mk('Minor pentatonic',0,0),mk('Minor pentatonic',1,1),mk('Minor pentatonic',-1,2),mk('Drums',0,9)]};
+const S={bri:8,dmap:null,vl:null,pm:false,pcp:false,tdm:false,am:0,pv:false,models:['mk3','mk3'],cm:false,dl:null,dm:false,gv:false,vv:false,swap:false,mm:false,mall:false,len:16,ext:null,sync:false,devs:{},conn:false,mh:false,bpm:120,playing:false,hd:null,arm:null,sel:0,root:0,tracks:[mk('Minor pentatonic',0,0),mk('Minor pentatonic',1,1),mk('Minor pentatonic',-1,2),mk('Drums',0,9)]};
 const cur=()=>S.tracks[S.sel];
 /* Drum map: S.dmap = null (default) or {name, m:[8 x {l:label, n:note, c:channel 0-15 or null}]} */
 const DLB=['BD','SD','CH','OH','CP','LT','MT','CR'];
@@ -249,8 +250,10 @@ function origAddr(n,layout){
  return[0x90,(8-row)*16+col-1];                        // X-Y: note = row*16+column (row 0 at the top); right column column 8
 }
 // list = [[number,r,g,b],...] with 0-127 colour values
-function padSend(pi,list){
+const PEX=new Set([11,12,13,14,15,16,17,18]); // pattern view: the brightness slider is not dimmed itself
+function padSend(pi,list,ex){
  const p=pads[pi],o=p.out,m=MODELS[S.models[pi]];if(!o)return;
+ if(S.bri<8){const f=S.bri/8;list=list.map(([n,r,g,b])=>ex&&ex.has(n)?[n,r,g,b]:[n,Math.round(r*f),Math.round(g*f),Math.round(b*f)]);} // LED brightness 1/8..8/8
  if(m.kind==='rgb'){
   const b=[...SYS(m.id),3];for(const[n,r,g,bl]of list)b.push(3,n,r,g,bl);
   o.send([...b,0xF7]);
@@ -353,29 +356,46 @@ function ctrl(i,n){ // Key mode only lets a few buttons through
   if((i===0&&(k===1||k===2))||k===7||(i===1&&k>=3&&k<=6))return ctrl0(i,n);
   return;
  }
- if(i===1&&idx>=0){t.kv=Math.round(10+(7-idx)*117/7);say('Key velocity '+t.kv);return render();} // lane buttons: velocity slider 10–127
- if(i===0&&idx===6&&!S.dm){t.kd=!t.kd;kOff();say(kDr(t)?'Drum pad layout.':'Keyboard layout.');return render();} // Vel toggles keyboard / drum pads
+ if(i===1&&idx>=0){t.kv=Math.round((8-idx)*127/8);say('Key velocity '+t.kv);return render();} // lane buttons: velocity slider, same 8 levels as the master velocity slider (16–127)
  if(i===0&&(S.dm||idx<4||idx===7))return ctrl0(i,n); // T1–T4 switch to another track, which brings its own mode
 }
 function ctrl0(i,n){
  const t=cur();
- if(S.pm){const rc=i===0&&n%10===9?8-Math.floor(n/10):-1; // pattern view: T1-T4, Play and Copy keep it open
-  if(rc===6){S.pcp=!S.pcp;say(S.pcp?'Copy: press the destination pattern.':'');return render();}
-  if(!(rc>=0&&rc<4)&&!(i===0&&n===91)){S.pm=false;S.pcp=false;if(rc===7){say('');return render();}}}
- if(S.tdm){S.tdm=false;if(i===0&&n===19){say('');return render();}} // tempo divider mode ends with any button; Mode itself only leaves
+ if(S.dm&&(S.pm||S.tdm)&&n%10===9){ // pattern / divider view (inside Mode): T1–T4 select the track, Copy works, the rest of the right column is idle
+  const rc=i===0?8-Math.floor(n/10):-1;
+  if(rc>=0&&rc<4){S.sel=rc;return render();}
+  if(rc===6&&S.pm){S.pcp=!S.pcp;say(S.pcp?'Copy: press the destination pattern.':'');return render();}
+  if(rc!==7)return;}
  if(n>90){const k=n-90;
   if(k===7){S.swap=!S.swap;return render();}
   if(k===8)return extBtn();
-  if(i===0){if(k===1){if(S.cm)clearAll();else if(mm())toggleAll();else togglePlay();}else if(k===2)return muteBtn();else if(k===3)setLen(S.len-1);else if(k===4)setLen(S.len+1);else if(k===5||k===6){const nm=k===5?-1:1,was=S.om===nm;S.om=was?0:nm;S.am=0;S.dm=false;S.cm=false;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.arm=null;say(S.om?`Octave ${S.om<0?'−':'+'}: press a note, lane button, or track button (press the button again to cancel).`:'Octave change cancelled.');}}
-  else{if((k===1||k===2)&&S.dm){S.dm=false;S.dl=null;S.tdm=true;say('Tempo divider: the top four pad rows are tracks 1–4 (leftmost pad 1, rightmost pad 16 across both pads). Press a pad to set that track\'s divider. Press Mode to leave.');}else if((k===3||k===4)&&S.dm)return patEnter();else if(k===1)setBpm(S.bpm-5);else if(k===2)setBpm(S.bpm+5);
+  if(i===0){if(k===1){if(S.cm)clearAll();else if(mm())toggleAll();else togglePlay();}else if(k===2)return muteBtn();else if(k===3)setLen(S.len-1);else if(k===4)setLen(S.len+1);else if(k===5||k===6){const nm=k===5?-1:1,was=S.om===nm;S.om=was?0:nm;S.am=0;S.dm=false;S.cm=false;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.arm=null;S.tdm=false;S.pm=false;S.pcp=false;S.dl=null;say(S.om?`Octave ${S.om<0?'−':'+'}: press a note, lane button, or track button (press the button again to cancel).`:'Octave change cancelled.');}}
+  else{if((k===1||k===2)&&S.dm){S.pm=false;S.pcp=false;S.dl=null;S.tdm=true;say('Tempo divider: the top four pad rows are tracks 1–4 (leftmost pad 1, rightmost pad 16 across both pads). Press a pad to set that track\'s divider. Press Mode to leave.');}else if((k===3||k===4)&&S.dm)return patEnter();else if(k===1)setBpm(S.bpm-5);else if(k===2)setBpm(S.bpm+5);
    else if(k===3)t.scale=SN[(SN.indexOf(t.scale)+SN.length-1)%SN.length];else if(k===4)t.scale=SN[(SN.indexOf(t.scale)+1)%SN.length];
-   else if(k===5||k===6){if(S.dm){const d=k===5?11:1;rootChg([t],()=>{t.rs=((t.rs||0)+d)%12;});S.dm=false;S.dl=null;say('Root changed for this track only.');}else if(t.scale==='Chromatic'&&!S.km)return accBtn(k===5?-1:1);else{const d=k===5?11:1;rootChg(S.tracks,()=>{S.root=(S.root+d)%12;});}}}
- }else if(i===0&&n%10===9){const idx=8-Math.floor(n/10);if(S.cm&&idx<4)clearTrack(idx);else if(S.dm&&idx===6)return keyBtn();else if(S.dm&&idx===5){t.jmp=!t.jmp;if(!t.jmp)holds[S.sel]=[];S.dm=false;S.dl=null;say(t.jmp?'Jump on: hold a bottom-row pad to hold this track on that step.':'Jump off.');}else if(S.dm&&idx<5){const t=cur();if(S.dl!==null)t.ldir[S.dl]=idx;else{t.dir=idx;t.ldir.fill(-1);}S.dm=false;S.dl=null;}else if(idx<4){if(S.om){const tr=S.tracks[idx];tr.oct=Math.max(-3,Math.min(3,tr.oct+S.om));S.om=0;say('Track octave changed.');}else if(mm())S.tracks[idx].mute=!S.tracks[idx].mute;else S.sel=idx;}else if(idx===4)return probBtn();else if(idx===5)return gateBtn();else if(idx===6)return velBtn();else if(idx===7)return dirBtn();}
- else if(i===1&&n%10===9){const r=Math.floor(n/10)-1;if(S.om){const t=cur();t.loct[r]=Math.max(-3,Math.min(3,(t.loct[r]||0)+S.om));S.om=0;say('Lane octave changed.');return render();}if(S.am)return accLane(r);if(S.vv||S.gv||S.pv)return setAll(r);if(S.cm)return clearLane(r);if(S.dm){S.dl=S.dl===r?null:r;if(S.dl!==null)say('Now press a stepping-mode button to set the mode of this lane only.');return render();}return mm()?toggleLaneMute(r):laneBtn(r);}
+   else if(k===5||k===6){if(S.dm){const d=k===5?11:1;rootChg([t],()=>{t.rs=((t.rs||0)+d)%12;});say('Root changed for this track only.');}else if(t.scale==='Chromatic'&&!S.km)return accBtn(k===5?-1:1);else{const d=k===5?11:1;rootChg(S.tracks,()=>{S.root=(S.root+d)%12;});}}}
+ }else if(i===0&&n%10===9){const idx=8-Math.floor(n/10);if(S.cm&&idx<4)clearTrack(idx);else if(S.dm&&idx===6)return keyBtn();else if(S.dm&&idx===5){t.jmp=!t.jmp;if(!t.jmp)holds[S.sel]=[];say(t.jmp?'Jump on: hold a bottom-row pad to hold this track on that step.':'Jump off.');}else if(S.dm&&idx<5){const t=cur();if(S.dl!==null)t.ldir[S.dl]=idx;else{t.dir=idx;t.ldir.fill(-1);}}else if(idx<4){if(S.om){const tr=S.tracks[idx];tr.oct=Math.max(-3,Math.min(3,tr.oct+S.om));say('Track octave changed.');}else if(mm())S.tracks[idx].mute=!S.tracks[idx].mute;else S.sel=idx;}else if(idx===4)return probBtn();else if(idx===5)return gateBtn();else if(idx===6)return velBtn();else if(idx===7)return dirBtn();}
+ else if(i===1&&n%10===9){const r=Math.floor(n/10)-1;if(S.om){const t=cur();t.loct[r]=Math.max(-3,Math.min(3,(t.loct[r]||0)+S.om));say('Lane octave changed.');return render();}if(S.am)return accLane(r);if(S.vv||S.gv||S.pv)return setAll(r);if(S.cm)return clearLane(r);if(S.dm){S.dl=S.dl===r?null:r;if(S.dl!==null)say('Now press a stepping-mode button to set the mode of this lane only.');return render();}return mm()?toggleLaneMute(r):S.ext?undefined:laneBtn(r);}
  ui();render();
 }
 const mm=()=>S.mm;
-function dirBtn(){
+const offAll=()=>{S.om=0;S.tdm=false;S.pm=false;S.pcp=false;S.dl=null;}; // a toggle button press ends the other toggles' sub-states
+const flc=c=>BL?c:c.map(v=>v>>3); // flashing second function: its own colour, pulsing
+const RED=()=>BL?[127,0,0]:[30,0,0]; // an active toggle button flashes red
+function topCol(i,k){
+ const c=topCol0(i,k);
+ if((i===0&&((k===2&&S.mm)||(k===5&&S.om<0)||(k===6&&S.om>0)))||(k===8&&S.ext)||(i===1&&S.am&&cur().scale==='Chromatic'&&((k===5&&S.am<0)||(k===6&&S.am>0))))return RED();
+ if((i===0&&k===1&&S.mm)||(i===1&&S.dm&&k>=1&&k<=6))return flc(c);
+ return c;
+}
+function rightCol(i,k){
+ const c=rightCol1(i,k),r=7-k,sub=S.pm||S.tdm;
+ if(i===0){
+  if((k===7&&S.dm)||(k===4&&S.pv)||(k===5&&S.gv)||(k===6&&(S.vv||(S.pm&&S.pcp))))return RED();
+  if((S.dm&&(sub?(k<4||(S.pm&&k===6)):k<7))||((S.mm||S.om)&&k<4))return flc(c);
+ }else if(!S.km&&!(S.vv||S.gv||S.pv)&&(S.dm?(S.dl!==r&&!sub):(S.mm||S.om||S.am)))return flc(c);
+ return c;
+}
+function dirBtn(){offAll();
  const a=S.arm,t=cur();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.cm=false;S.dl=null;S.dm=!S.dm;
@@ -389,7 +409,7 @@ function setAll(r){
  render();
 }
 // Chromatic scale: Pad B top row 5 (flat) and 6 (sharp) toggle an accidental mode; afterwards pads change single notes
-function accBtn(m){
+function accBtn(m){offAll();
  const a=S.arm,t=cur(),was=S.am;
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.cm=false;
@@ -410,28 +430,28 @@ function accPress(step,r){
  if(b<0){t.g[step]|=1<<r;t.ln[j]=0;}                // an empty pad creates the note
  t.acc[j]=v;render();
 }
-function probBtn(){
+function probBtn(){offAll();
  const a=S.arm,t=cur(),vl0=vlane();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.dm=false;S.cm=false;S.am=0;S.pv=!S.pv;S.vl=S.pv?vl0:null;
  if(S.pv)say((S.vl!=null?'Lane '+(S.vl+1)+' only. ':'')+'Probability view: each column sets the chance (0–100%) that the step plays. Press the bottom pad twice for 0%.');
  render();
 }
-function gateBtn(){
+function gateBtn(){offAll();
  const a=S.arm,t=cur(),vl0=vlane();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.dm=false;S.cm=false;S.pv=false;S.am=0;S.gv=!S.gv;S.vl=S.gv?vl0:null;
  if(S.gv)say((S.vl!=null?'Lane '+(S.vl+1)+' only. ':'')+'Gate view: each column sets the gate length of the notes in that step (100% = whole step; extended notes are not affected).');
  render();
 }
-function velBtn(){
+function velBtn(){offAll();
  const a=S.arm,t=cur(),vl0=vlane();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.ext=null;S.mm=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.cm=false;S.vv=!S.vv;S.vl=S.vv?vl0:null;
  if(S.vv)say((S.vl!=null?'Lane '+(S.vl+1)+' only. ':'')+'Velocity view: each column sets the velocity of all notes in that step.');
  render();
 }
-function muteBtn(){
+function muteBtn(){offAll();
  const a=S.arm,t=cur();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.ext=null;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.cm=false;S.mm=!S.mm;
@@ -450,7 +470,7 @@ function toggle(step,r){
  else{const was=!!(t.g[step]>>r&1);t.g[step]^=1<<r;t.ln[r*16+step]=0;t.acc[r*16+step]=0;t.no[r*16+step]=0;}
  render();
 }
-function extBtn(){
+function extBtn(){offAll();
  const a=S.arm,t=cur();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.cm=false;S.ext=S.ext?null:{a:null};
@@ -470,15 +490,15 @@ function extPress(step,r){
  const ac=t.acc[r*16+a];
  for(let b=lo;b<=hi;b++){t.g[b]&=~(1<<r);t.ln[r*16+b]=0;t.acc[r*16+b]=0;}
  t.g[lo]|=1<<r;t.ln[r*16+lo]=hi-lo+1;t.acc[r*16+lo]=ac;
- S.ext=null;render();
+ S.ext={a:null};render();
 }
 function pressPad(step,r){
- if(S.pm){if(step<8&&r>=3)patPress(step,r);return;}
+ if(S.pm){if(step<8&&r>=3)patPress(step,r);else if(step<8&&r===0){S.bri=step+1;render();persist();}return;}
  if(S.km)return kbPress(step,r);
  if(S.tdm){if(r>=4)S.tracks[7-r].div=step+1;render();return;} // tempo divider sliders: row 8 = track 1 … row 5 = track 4
  if(S.pv){const th=Math.round((r+1)*100/8);vset('prob',step,(r===0&&vget('prob',step)===th)?0:th);render();return;}
  if(S.am){accPress(step,r);return;}
- if(S.om){const t=cur(),ix=r*16+step,b=span(t,r,step);if(b>=0){const j=r*16+b;t.no[j]=Math.max(-3,Math.min(3,(t.no[j]||0)+S.om));say('Note octave changed.');}S.om=0;return render();} if(S.cm){if(r===0)clearStep(step);return;} // clear mode: bottom-row pads clear a step
+ if(S.om){const t=cur(),ix=r*16+step,b=span(t,r,step);if(b>=0){const j=r*16+b;t.no[j]=Math.max(-3,Math.min(3,(t.no[j]||0)+S.om));say('Note octave changed.');}return render();} if(S.cm){if(r===0)clearStep(step);return;} // clear mode: bottom-row pads clear a step
  if(S.gv){vset('gate',step,Math.round((r+1)*100/8));render();return;}
  if(S.vv){vset('vel',step,Math.round((r+1)*127/8));render();return;}
  if(mm()){if(r===0){cur().sm[step]^=1;render();}return;}
@@ -542,9 +562,10 @@ function kbRelease(step,r){const key=r*16+step;if(kA.has(key)){kOffKey(kA,key);r
 function keyBtn(){
  const a=S.arm,t=cur();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
- S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.om=0;S.cm=false;S.dm=false;S.dl=null;S.tdm=false;
- kOff();S.km=!S.km;ksig=sg();
- if(S.km)say('Key mode for this track: Pad A keys sound while pressed, Pad B keys latch. Its sequencer is off, the other tracks keep playing. Play/Stop, Oct−/Oct+, Scale and Root work. Mode, then Vel leaves Key mode.');else say('');
+ S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.om=0;S.cm=false;
+ kOff();if(!t.km){t.km=true;t.kd=false;}else if(!t.kd)t.kd=true;else{t.km=false;t.kd=false;} // sequencer -> default layout -> other layout -> sequencer
+ ksig=sg();
+ say(!t.km?'Sequencer mode.':kDr(t)?'Drum pads: Pad A sounds while held, Pad B retriggers. Press Key (Vel) again while Mode is on to continue.':'Keyboard: Pad A sounds while held, Pad B latches. Press Key (Vel) again while Mode is on to continue.');
  render();
 }
 function toggleLaneMute(r){cur().lm[r]^=1;render();}
@@ -556,7 +577,7 @@ function laneBtn(r){
  render();
 }
 // Clear mode (CLR button): afterwards press a track button, a lane button or Play. One-shot, clears notes only.
-function cmBtn(){
+function cmBtn(){offAll();
  const a=S.arm,t=cur();
  if(a&&a.first!==null){t.lo[a.r]=a.old[0];t.hi[a.r]=a.old[1];}
  S.arm=null;S.ext=null;S.mm=false;S.vv=false;S.gv=false;S.pv=false;S.am=0;S.dm=false;S.tdm=false;S.pm=false;S.pcp=false;S.cm=!S.cm;
@@ -584,31 +605,29 @@ function setBpm(v){S.bpm=Math.max(30,Math.min(300,v));}
 
 /* ---------- LEDs ---------- */
 // LED colour of a top-row button (i = logical pad, k = 1..8); shared by the Launchpads and the on-screen copy
-function topCol(i,k){
+function topCol0(i,k){
  let col=[0,0,0];
  if(i===0)col=k===1?(S.cm?[127,40,0]:S.mall?[127,0,0]:S.playing?[0,127,0]:[0,40,0]):k===2?(S.mm?[127,0,0]:[60,50,0]):k<=4?[0,40,100]:k<=6?(S.om=== (k===5?-1:1)?[127,35,110]:[0,60,50]):col;
  else col=k<=2?[0,30,80]:k<=4?[60,30,0]:k<=6?[40,0,70]:[0,0,0];
  if(k===7)col=S.swap?[127,90,0]:[70,35,0];
  if(k===8)col=S.ext?[0,127,90]:[0,25,18];
- if(i===1&&k<=2&&(S.dm||S.tdm))col=S.tdm?[0,127,127]:[60,60,0]; // BPM buttons enter / show tempo divider mode
- if(i===1&&(k===5||k===6)&&cur().scale==='Chromatic')col=k===6?(S.am>0?[127,80,0]:[60,35,0]):(S.am<0?[0,100,127]:[0,35,70]); if(i===1&&(k===5||k===6)&&S.dm)col=[60,60,0]; if(S.km&&!((i===0&&(k===1||k===2||k===5||k===6))||k===7||(i===1&&k>=3&&k<=6)))col=[0,0,0]; if(S.km&&i===1&&(k===5||k===6)&&!S.dm)col=[40,0,70]; // Mode + Root: this track only; Key mode greys out unused buttons // flat / sharp buttons
- if(i===1&&(k===3||k===4)&&(S.dm||S.pm))col=S.pm?[0,127,127]:[60,60,0];
+  // BPM buttons enter / show tempo divider mode
+ if(i===1&&(k===5||k===6)&&cur().scale==='Chromatic')col=k===6?(S.am>0?[127,80,0]:[60,35,0]):(S.am<0?[0,100,127]:[0,35,70]); if(S.km&&!((i===0&&(k===1||k===2||k===5||k===6))||k===7||(i===1&&k>=3&&k<=6)))col=[0,0,0]; if(S.km&&i===1&&(k===5||k===6)&&!S.dm)col=[40,0,70]; // Mode + Root: this track only; Key mode greys out unused buttons // flat / sharp buttons
+ 
  return col;
 }
 // LED colour of a right-column button (i = logical pad, k = 0..7 from the top)
-function rightCol(i,k){const c=rightCol0(i,k);if(i===0&&k===6&&S.dm)return S.km?[0,127,100]:[0,40,35]; // Key
- if(S.km){if(i===1){const v=cur().kv||100,r=7-k,lv=Math.round(10+r*117/7),top=Math.floor((v-10)*7/117);return lv<=v?(r===top?[90,30,127]:[34,0,60]):[6,0,12];}if(i===0&&k>=4&&k<=5&&!S.dm&&!S.pm)return[0,0,0];if(i===0&&k===6&&!S.dm&&!S.pm)return kDr(cur())?[127,60,0]:[50,25,0];}return c;}
+function rightCol1(i,k){const c=rightCol0(i,k); // Key
+ if(S.km){if(i===1){const v=cur().kv||100,r=7-k,lv=Math.round((r+1)*127/8);let top=-1;for(let q=0;q<8;q++)if(Math.round((q+1)*127/8)<=v)top=q;return lv<=v?(r===top?[90,30,127]:[34,0,60]):[6,0,12];}if(i===0&&k>=4&&k<=6&&!S.dm&&!S.pm)return[0,0,0];}return c;}
 function rightCol0(i,k){
  const t=cur(),r=7-k;let col=[0,0,0];
  if(i===0&&k<4)col=S.cm?[127,40,0]:mm()&&S.tracks[k].mute?[127,0,0]:k===S.sel?TC[k]:TC[k].map(v=>v>>3);
  if(i===0&&k===5)col=S.gv?[0,60,127]:[0,12,45];
  if(i===0&&k===7)col=S.dm?[100,127,0]:[30,40,0];
  if(i===0&&k===4)col=S.pv?[30,127,60]:[10,40,20];
- if(i===0&&S.dm&&k<5)col=(S.dl!==null?effDir(t,S.dl):t.dir)===k?MC[k]:MC[k].map(v=>v>>2);
- if(i===0&&S.dm&&k===5)col=t.jmp?[0,127,127]:[0,45,45]; // Jump on/off
  if(i===0&&k===6)col=S.vv?[127,60,0]:[50,25,0];if(i===0&&k===6&&S.pm)col=S.pcp?[127,127,0]:[60,50,0];
  if(i===1)col=S.cm?[127,40,0]:mm()?(t.lm[r]?[127,0,0]:[0,60,0]):S.arm&&S.arm.r===r?[127,127,127]:(t.lo[r]!==0||t.hi[r]!==15)?[0,35,100]:[0,8,30];
- if(i===1&&S.dm)col=S.dl===r?[127,127,127]:MC[effDir(t,r)].map(v=>v>>2); if(i===1&&!S.dm&&!S.am&&!S.cm&&!mm()&&!S.vv&&!S.gv&&!S.pv&&(t.loct[r]||0)!==0)col=[127,35,110];
+ if(i===1&&S.dm&&S.dl===r)col=[127,127,127]; if(i===1&&!S.dm&&!S.am&&!S.cm&&!mm()&&!S.vv&&!S.gv&&!S.pv&&(t.loct[r]||0)!==0)col=[127,35,110];
  if(i===1&&S.am)col=S.am>0?(canSharp(r)?[127,80,0]:[20,10,0]):(canFlat(r)?[0,100,127]:[0,10,20]); // lanes that accept the accidental
  if(i===1&&(S.vv||S.gv||S.pv)){ // bar showing the average of all steps
   const kind=S.vv?'vel':S.gv?'gate':'prob';let sum=0;for(let x=0;x<S.len;x++)sum+=vget(kind,x);
@@ -616,6 +635,7 @@ function rightCol0(i,k){
  }
  return col;
 }
+const nk=t=>!t.km?(t.scale==='Drums'?'Drum':'Keys'):!t.kd?(t.scale==='Drums'?'Keys':'Drum'):'Seq'; // label of Vel while Mode is on: what the next press switches to
 const topLbl=(i,k)=>i===1&&(k===3||k===4)&&(S.dm||S.pm)?'Pat':i===1&&k<=2&&(S.dm||S.tdm)?'Div':i===1&&(k===5||k===6)&&(S.dm||S.km)?(k===5?'Root−':'Root+'):i===0&&k===1?(S.playing?'Stop':'Play'):i===1&&(k===5||k===6)&&cur().scale==='Chromatic'?(k===5?'♭':'♯'):TL[i][k-1];
 const topTtl=(i,k)=>i===1&&(k===3||k===4)&&(S.dm||S.pm)?'Pattern view':i===1&&(k===5||k===6)&&(S.dm||S.km)?(S.dm?'Root of this track only':k===5?'Root note down':'Root note up'):i===1&&(k===5||k===6)&&cur().scale==='Chromatic'?(k===5?'Flat mode: then press notes to flatten them':'Sharp mode: then press notes to sharpen them'):TT[i][k-1];
 const accCol=(c,a)=>a>0?c.map(v=>v+((127-v)>>1)):a<0?c.map(v=>(v*.55)|0):c; // sharp = lighter, flat = darker
@@ -635,12 +655,12 @@ function led(i){
   const lo=t.lo[r],hi=t.hi[r],armed=S.arm&&S.arm.r===r,show=armed||lo!==0||hi!==15;
   const inr=show&&step>=lo&&step<=hi,edge=show&&(step===lo||step===hi);
   const rt=isRoot(t,r),sb=span(t,r,step),tie=sb>=0&&sb<step,anc=!!(S.ext&&S.ext.a&&S.ext.a.r===r&&S.ext.a.s===step),ac=on&&t.scale==='Chromatic'?t.acc[r*16+step]:0;
-  add((r+1)*10+k+1,anc?[100,127,127]:S.cm&&r===0?[127,40,0]:mm()&&r===0?(t.sm[step]?[127,0,0]:[0,45,0]):t.jmp&&r===0&&step<S.len&&!on&&!hd?[0,30,40]:step>=S.len?(on?c.map(v=>v>>3):[0,0,0]):on&&hd?[127,127,127]:on?(t.no[r*16+step]? [127,35,110] : t.lm[r]||t.sm[step]?c.map(v=>v>>2):accCol(c,ac)):tie?(hd?[90,90,90]:c.map(v=>(v*(t.lm[r]?.1:.4))|0)):hd?[16,16,22]:edge?[0,45,120]:inr?[0,0,k%4===0?20:12]:rt?[0,k%4===0?22:14,0]:k%4===0?[4,4,6]:[0,0,0]);
+  add((r+1)*10+k+1,anc?[100,127,127]:S.cm&&r===0?flc([127,40,0]):mm()&&r===0?flc(t.sm[step]?[127,0,0]:[0,45,0]):t.jmp&&r===0&&step<S.len&&!on&&!hd?flc([0,30,40]):step>=S.len?(on?c.map(v=>v>>3):[0,0,0]):on&&hd?[127,127,127]:on?(t.no[r*16+step]? [127,35,110] : t.lm[r]||t.sm[step]?c.map(v=>v>>2):accCol(c,ac)):tie?(hd?[90,90,90]:c.map(v=>(v*(t.lm[r]?.1:.4))|0)):hd?[16,16,22]:edge?[0,45,120]:inr?[0,0,k%4===0?20:12]:rt?[0,k%4===0?22:14,0]:k%4===0?[4,4,6]:[0,0,0]);
  }
  for(let k=1;k<=8;k++)add(90+k,topCol(i,k));
  for(let k=0;k<8;k++)add((8-k)*10+9,rightCol(i,k));
  add(99,i===0?[24,0,0]:[0,24,0]); // Novation logo: dim red = Pad A role, dim green = Pad B role
- padSend(pi,sp);
+ padSend(pi,sp,S.pm&&i===0?PEX:null);
 }
 
 /* ---------- On-screen UI ---------- */
@@ -649,12 +669,12 @@ const TL=[['Play','Mute','Len−','Len+','Oct−','Oct+','Swap','Extend'],['BPM�
 const TT=[['Play / stop','Mute mode','Shorten sequence','Lengthen sequence','Octave down','Octave up','Swap pads','Extend note'],['Tempo −5','Tempo +5','Previous scale','Next scale','Root note down','Root note up','Swap pads','Extend note']];
 const RT=[['Track 1','Track 2','Track 3','Track 4','Probability view (random walk while choosing a stepping mode)','Gate view (Jump on/off while choosing a stepping mode)','Velocity view (Key mode while choosing a stepping mode)','Stepping mode']];
 function rightLbl(i,k){
- if(i===1&&S.km)return Math.round(10+(7-k)*117/7);
+ if(i===1&&S.km)return Math.round((8-k)*127/8);
  if(i===1)return S.vv||S.gv||S.pv?Math.round((8-k)*(S.vv?127:100)/8):cur().scale==='Drums'&&S.dmap?S.dmap.m[7-k].l:LBL[pitch(cur(),7-k)%12];             // note of the lane, e.g. Bb or F#
- if(k<4)return S.dm?['Fwd','Rev','P-P','Rnd'][k]:'T'+(k+1);
- if(k===4)return S.dm?'Walk':'Prob';
- if(k===5)return S.dm?'Jump':'Gate';
- return k===6?(S.pm?'Copy':S.dm?'Key':S.km?(kDr(cur())?'Keys':'Drum'):'Vel'):'Mode';
+ if(k<4)return S.dm&&!S.pm&&!S.tdm?['Fwd','Rev','P-P','Rnd'][k]:'T'+(k+1);
+ if(k===4)return S.dm&&!S.pm&&!S.tdm?'Walk':'Prob';
+ if(k===5)return S.dm&&!S.pm&&!S.tdm?'Jump':'Gate';
+ return k===6?(S.pm?'Copy':S.dm&&!S.tdm?nk(cur()):'Vel'):'Mode';
 }
 function mkRb(i,k){
  const n=(8-k)*10+9,b=document.createElement('button'),ttl=i===0?RT[0][k]:`Lane ${8-k}: loop start/end (mute in mute mode, select in stepping mode)`;
@@ -806,6 +826,7 @@ function draw(){
   b.classList.toggle('smm',mm()&&r===0&&!!t.sm[step]);
   b.classList.toggle('cmt',S.cm&&r===0);
   b.classList.toggle('jmp',!!t.jmp&&r===0&&step<S.len);
+  b.classList.toggle('fo',!BL&&r===0&&!S.pm&&!S.km&&!S.tdm&&!(t.g[step]>>r&1)&&!!(S.cm||mm()||(t.jmp&&step<S.len))); // bottom row flashes while a whole-step mode is active
   b.classList.toggle('in',!!show&&step>=lo&&step<=hi);
   b.classList.toggle('edge',!!show&&(step===lo||step===hi));
   {const td=S.tdm&&r>=4?S.tracks[7-r].div:0;b.style.background=S.tdm?(td?(step<td?css(step===td-1?TC[7-r]:TC[7-r].map(v=>v>>1)):'#232731'):'#12141a'):'';if(S.tdm)b.textContent=td&&step===td-1?td:'';}
@@ -833,6 +854,7 @@ const pser=o=>{const r={};PA.forEach(k=>r[k]=[...o[k]]);PS.forEach(k=>r[k]=o[k])
 const pdes=(s,t)=>{const o=blank(t);PA.forEach(k=>(s[k]||[]).slice(0,o[k].length).forEach((v,i)=>o[k][i]=v));o.dir=clamp(s.dir,0,4);if(SN.includes(s.scale))o.scale=s.scale;o.oct=clamp(s.oct,-3,3);o.div=clamp(s.div??1,1,16);o.jmp=!!s.jmp;o.rs=clamp(s.rs,0,11);return o;};
 const patHas=(x,k)=>k===x.pi?x.g.some(v=>v):!!(x.pats[k]&&x.pats[k].g.some(v=>v));
 function patCol(i,r,k){ // pattern view colour of a grid pad: Pad A rows 8-5 = tracks 1-4, row 4 = all tracks
+ if(i===0&&r===0)return k<S.bri?(k===S.bri-1?[127,127,127]:[40,40,50]):[4,4,6]; // bottom row of Pad A: LED brightness slider
  if(i!==0||r<3)return[0,0,0];
  if(r===3)return S.tracks.every(x=>x.pi===k)?[127,127,127]:BL&&S.tracks.some(x=>x.cue===k)?[127,127,127]:[28,28,40];
  const x=S.tracks[7-r],c=TC[7-r];
@@ -852,14 +874,14 @@ function patPress(p,r){
  if(S.pcp){S.pcp=false;say('Pattern copied.');}
  render();
 }
-function patEnter(){S.dm=false;S.dl=null;S.pm=true;S.pcp=false;say('Pattern view: rows 1–4 = tracks 1–4, row 5 = all tracks. Press a pattern to cue it (again = switch now). Copy, then a pattern, copies the active pattern. Mode leaves.');render();}
+function patEnter(){S.tdm=false;S.dl=null;S.pm=true;S.pcp=false;say('Pattern view: rows 1–4 = tracks 1–4, row 5 = all tracks. Press a pattern to cue it (again = switch now). Copy, then a pattern, copies the active pattern. Mode leaves.');render();}
 
 /* ---------- Persistence ---------- */
 const KEY='twin-pad-sequencer-v1';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Math.round(+v)||0));
 function ser(part='all'){ // part: 'all', 'midi' (devices, models, clock, per-track output and channel) or 'ptn' (everything else)
  const m=part!=='ptn',p=part!=='midi',d={app:'twin-pad-sequencer',v:1};
- if(m)Object.assign(d,{conn:S.conn,sync:S.sync,models:S.models,devs:S.devs,dmap:S.dmap?dmOut():null});
+ if(m)Object.assign(d,{bri:S.bri,conn:S.conn,sync:S.sync,models:S.models,devs:S.devs,dmap:S.dmap?dmOut():null});
  if(p)Object.assign(d,{bpm:S.bpm,root:S.root,sel:S.sel,swap:S.swap,len:S.len});
  d.tracks=S.tracks.map(t=>{const o={};
   if(m){o.ch=t.ch;o.so=t.so;}
@@ -870,7 +892,7 @@ function ser(part='all'){ // part: 'all', 'midi' (devices, models, clock, per-tr
 function apply(d){
  if(!d||typeof d!=='object'||!(Array.isArray(d.tracks)||d.app==='twin-pad-sequencer'))throw new Error('not a Twin Pad Sequencer file');
  kOff();S.arm=null;S.om=0;S.pm=false;S.pcp=false; // only the fields found in the file are loaded
- if('bpm' in d)S.bpm=clamp(d.bpm||120,30,300);if('root' in d)S.root=clamp(d.root,0,11);if('sel' in d)S.sel=clamp(d.sel,0,3);if('sync' in d)S.sync=!!d.sync;if('swap' in d)S.swap=!!d.swap;if('len' in d)S.len=clamp(d.len??16,1,16);
+ if('bri' in d)S.bri=clamp(d.bri,1,8);if('bpm' in d)S.bpm=clamp(d.bpm||120,30,300);if('root' in d)S.root=clamp(d.root,0,11);if('sel' in d)S.sel=clamp(d.sel,0,3);if('sync' in d)S.sync=!!d.sync;if('swap' in d)S.swap=!!d.swap;if('len' in d)S.len=clamp(d.len??16,1,16);
  if(d.devs&&typeof d.devs==='object')S.devs=d.devs;
  if('dmap' in d)S.dmap=d.dmap?dmParse(d.dmap):null;
  if(Array.isArray(d.models))S.models=[0,1].map(i=>{const mo=d.models[i]==='legacy'?'xy':d.models[i];return MODELS[mo]?mo:'mk3';});
@@ -890,7 +912,7 @@ function apply(d){
   (t.ln||[]).slice(0,128).forEach((v,k)=>o.ln[k]=clamp(v,0,16));
   for(let r=0;r<8;r++){const lo=clamp(t.lo?.[r]??0,0,15),hi=clamp(t.hi?.[r]??15,0,15);o.lo[r]=Math.min(lo,hi);o.hi[r]=Math.max(lo,hi);}
   {const sc=ALIAS[t.scale]||t.scale;if(SN.includes(sc))o.scale=sc;}
-  o.oct=clamp(t.oct,-3,3);o.dir=clamp(t.dir,0,4);o.ldir.fill(-1);(t.ldir||[]).slice(0,8).forEach((v,k)=>o.ldir[k]=clamp(v,-1,4));o.mute=!!t.mute;o.div=clamp(t.div??1,1,16);o.jmp=!!t.jmp;o.rs=clamp(t.rs,0,11);o.km=!!t.km;o.kd=!!t.kd;LK.forEach(k=>{o[k].fill(k==='lgate'?50:k[0]==='f'?0:100);(t[k]||[]).slice(0,o[k].length).forEach((v,i)=>o[k][i]=clamp(v,0,255));});o.kv=clamp(t.kv??100,10,127);
+  o.oct=clamp(t.oct,-3,3);o.dir=clamp(t.dir,0,4);o.ldir.fill(-1);(t.ldir||[]).slice(0,8).forEach((v,k)=>o.ldir[k]=clamp(v,-1,4));o.mute=!!t.mute;o.div=clamp(t.div??1,1,16);o.jmp=!!t.jmp;o.rs=clamp(t.rs,0,11);o.km=!!t.km;o.kd=!!t.kd;LK.forEach(k=>{o[k].fill(k==='lgate'?50:k[0]==='f'?0:100);(t[k]||[]).slice(0,o[k].length).forEach((v,i)=>o[k][i]=clamp(v,0,255));});o.kv=clamp(t.kv??100,1,127);
   o.pi=clamp(t.pi,0,7);o.cue=-1;o.pats=Array.from({length:8},(_,k)=>t.pats&&t.pats[k]&&k!==o.pi?pdes(t.pats[k],o):null);
  });
 }
@@ -1015,7 +1037,7 @@ addEventListener('blur',()=>{clearHolds();kOff(false);});
 addEventListener('beforeunload',()=>pads.forEach((p,i)=>padExit(p,S.models[i])));
 if(innerWidth<760||innerHeight<520)$('#devbox').open=false; // more room on phones; open it to pick devices
 addEventListener('contextmenu',e=>{if(e.target.closest('.pads,.bar'))e.preventDefault();}); // no long-press menu on touch
-setInterval(()=>{BL=!BL;if(S.pm&&S.tracks.some(t=>t.cue>=0)){draw();led(0);led(1);}},350); // flashing cued patterns
+setInterval(()=>{BL=!BL;if((S.pm&&S.tracks.some(t=>t.cue>=0))||S.mm||S.dm||S.om||S.ext||S.am||S.vv||S.gv||S.pv||S.pcp||S.cm||cur().jmp){draw();led(0);led(1);}},350); // flashing cued patterns
 restore();ui();draw();if(S.conn)connect();
 </script>
 </body>

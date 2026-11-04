@@ -178,3 +178,20 @@ Edits by Python scripts with unique-anchor asserts, then a `new Function()` synt
 - Untested: loading a map on real hardware, per-lane channels on a synth, Key mode drum pads with mapped channels, the Drum map control in the MIDI devices layout on phones.
 - A map applies globally; there is no per-track map or multiple stored maps.
 - Switching a track away from Drums while notes ring only silences the old channels on the next stop, mute or map change.
+
+## Session changes (v07, 2026-11-04): toggle button behaviour
+Syntax checked only. Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual not yet updated).
+- **Toggles:** Mute (`S.mm`), Mode (`S.dm`), Oct−/Oct+ (`S.om`), Extend (`S.ext`), ♭/♯ (`S.am`) and the Vel/Gate/Prob views change state only when their own button is pressed. Nothing ends them any more: Mode stays on after a stepping mode, Jump, Root± or Key; Oct stays armed after a target; Extend re-arms after each extension. Pressing another toggle switches the active one off (`offAll()` clears `om`, `tdm`, `pm`, `pcp`, `dl`; each toggle function calls it first). Clear mode stays one-shot.
+- **Mode sub-views:** pattern view (`pm`) and tempo divider mode (`tdm`) now live inside Mode (`dm` stays true). In them T1–T4 select the track, Vel is Copy (pattern view), other right-column buttons are idle; Mode leaves both. A lane picked for a per-lane stepping mode (`dl`) stays selected until pressed again or Mode ends. Lane buttons are ignored while Extend is on.
+- **LEDs:** `topCol`/`rightCol` are wrappers around `topCol0`/`rightCol1`: an active toggle returns `RED()` (flashing red); second functions return `flc(colour)` (own colour pulsing). The old Mode colours (stepping colours, yellow/cyan BPM, Pat, Root, Jump, Key) were removed. The grid is never flashed. Phase `BL` (350 ms interval) now redraws whenever a toggle is active.
+- **Open:** the current stepping mode and Jump state are no longer visible on the buttons. Untested on hardware: flash load (a full LED update every 350 ms).
+
+### v07 fix: Key button cycle
+`keyBtn` (Mode, then Vel) now cycles per track: sequencer -> `km` with `kd=false` (default layout of the scale) -> `kd=true` (other layout) -> sequencer (`km=false`, `kd=false`). Mode stays on. The Vel label while Mode is on names the next state (`nk`: Keys / Drum / Seq). With Mode off, Vel does nothing in Key mode (dark LED); the old Vel layout toggle in the `ctrl` wrapper was removed. Syntax checked only.
+
+### v07: flashing step row and LED brightness
+- **Bottom row flash:** while clear mode, mute mode or Jump (current track) is active the bottom grid row pulses (`flc` in `led`; class `fo` on screen, empty cells only). The blink interval also redraws for `S.cm` and `cur().jmp`.
+- **Brightness:** `S.bri` 1–8 (default 8, saved in the MIDI group as `bri`). `padSend(pi,list,ex)` scales all LED colours by `bri/8`; in pattern view the bottom row of Pad A (11–18, `PEX`) is the slider and is exempt from dimming. `pressPad` in pattern view sets it. Launchpads only; on-screen colours are unchanged; no drag on screen. Syntax checked only.
+
+### v07: Key velocity range
+The Key mode velocity slider (Pad B lane buttons) uses the same levels as the step velocity master slider: `round((r+1)*127/8)`, i.e. 16, 32 ... 127 (`ctrl` wrapper, `rightCol1`, `rightLbl`). `kv` is clamped 1–127 on load; old saved values show as the lit levels up to them. Syntax checked below.

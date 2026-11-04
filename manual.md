@@ -34,7 +34,8 @@ Twin Pad Sequencer is a step sequencer that runs in your web browser and can be 
 - **Selected track:** the pads and the settings row always edit the *selected track*. The selected track's button is the brightest in the Pad A right column.
 - **Lane:** one row of notes. The bottom row is the lowest note.
 - **Step:** one 16th note. The default length is 16 steps, one bar.
-- **Modes:** several functions (mute, clear, extend note, velocity, gate, probability, stepping mode, loop setting) work as *modes*. You press a button to enter a mode, press a target, and then the mode ends or you press the button again. Entering one mode cancels another.
+- **Modes:** several functions (mute, clear, extend note, velocity, gate, probability, stepping mode, loop setting) work as *modes*. 
+- **Toggle buttons:** Mute, Mode, Oct−, Oct+, Extend, ♭, ♯, Vel, Gate and Prob (the views) change state only when you press them: they stay on until you press the same button again, however many targets you use. An active toggle button **flashes red**. Buttons that gain a second function while it is on keep their colour and **flash** instead (Mode: T1–T4, Prob, Gate, Vel, BPM±, Scale±, Root± and the lane buttons; Mute: Play, T1–T4 and the lane buttons; Oct−/Oct+: T1–T4 and the lane buttons; ♭/♯: the lane buttons). The note grid never flashes. Pressing another toggle button switches the active one off.
 
 ------------------------------------------------------------------------
 
@@ -112,8 +113,8 @@ On a phone in portrait, the two pads are stacked. On a tablet or desktop they si
 
 - **Scale** (per track): the **Scale** dropdown or Pad B top row buttons 3 and 4 (previous and next). Lanes are scale degrees from the root up. **Drums** maps the 8 lanes to General MIDI drum notes.
 - **Root** (all tracks, shifted together): the **Root** dropdown (it shows the selected track's root) or Pad B top row buttons 5 and 6 (on a track set to **Chromatic** those two buttons become ♭ and ♯, see [Chromatic scale](#chromatic-scale-sharps-and-flats)). Lanes that are the root note have a dark green background (not in Drums). **One track only:** press **Mode**, then **Root−** or **Root+** (they turn yellow; also on a Chromatic track) to shift the root of the selected track only. **Octave carry:** when a root changes from B to C the track's octave goes up by 1, from C to B it goes down by 1 (limit ±3, Drums excluded), so the pitch moves by one semitone.
-- **Octave** (per track, −3 to +3): the **Octave** dropdown changes the track octave directly. Pad A top-row **Oct− / Oct+** buttons arm an octave change (press the lit button again to cancel); then press a note pad to change that note, a Pad B lane button to change the whole lane (including empty steps), or a T1–T4 button to change the whole track. Note-specific octave changes reset when the note is switched off and on again.
-- **Tempo ÷** (per track, 1–16, default 1): the track advances only every Nth step, so it runs at 1/N of the tempo. Notes and gates stretch with it. Tracks stay in step with each other, and the divider never restarts playback. **On the pads:** press **Mode**, then **BPM−** or **BPM+** (Pad B top row, buttons 1 and 2, which show Div). The four top rows of both pads become one slider per track, top row = track 1, fourth row = track 4, with 16 positions across the two pads (leftmost pad 1, rightmost pad 16). Press a pad to set that track’s divider. Press **Mode** again, or any other button, to leave.
+- **Octave** (per track, −3 to +3): the **Octave** dropdown changes the track octave directly. Pad A top-row **Oct− / Oct+** buttons arm an octave change (press the flashing button again to cancel; it stays on until then); then press a note pad to change that note, a Pad B lane button to change the whole lane (including empty steps), or a T1–T4 button to change the whole track. Note-specific octave changes reset when the note is switched off and on again.
+- **Tempo ÷** (per track, 1–16, default 1): the track advances only every Nth step, so it runs at 1/N of the tempo. Notes and gates stretch with it. Tracks stay in step with each other, and the divider never restarts playback. **On the pads:** press **Mode**, then **BPM−** or **BPM+** (Pad B top row, buttons 1 and 2, which show Div). The four top rows of both pads become one slider per track, top row = track 1, fourth row = track 4, with 16 positions across the two pads (leftmost pad 1, rightmost pad 16). Press a pad to set that track’s divider. T1–T4 select the track. Press **Mode** again to leave.
 - **Instrument output** (per track): the MIDI output this track plays to. Choose a different device per track to play several instruments at once. The default is the first port that is not a Launchpad. Changing it sends all-notes-off to the old device.
 - **Channel** (per track, 1–16): the **Channel** dropdown. Drums use channel 10 by default.
 
@@ -145,8 +146,8 @@ The **Chromatic** scale starts out like C major: the eight lanes are **C D E F G
 
 On a track set to Chromatic, Pad B top row buttons 5 and 6 change their job: instead of Root − / +, they become **♭ (flat)** and **♯ (sharp)** mode buttons (the on-screen labels change too).
 
-1.  Press **♯** (button 6). It lights orange. Now press a note on the grid to **sharpen** it. Press an **empty pad** to create a sharpened note.
-2.  Press **♭** (button 5). It lights blue. Now press a note to **flatten** it, or an empty pad to create a flattened note.
+1.  Press **♯** (button 6). It flashes red. Now press a note on the grid to **sharpen** it. Press an **empty pad** to create a sharpened note.
+2.  Press **♭** (button 5). It flashes red. Now press a note to **flatten** it, or an empty pad to create a flattened note.
 3.  Instead of a note, press a **lane button** in the Pad B right column to apply the accidental to the **whole lane**: every note in that lane of the selected track is sharpened (or flattened). Lanes that cannot take the accidental (E and B for sharp, F and C for flat) are shown dim and ignored. Empty steps stay empty.
 4.  Press the same button again to leave the mode. Starting another mode also ends it.
 
@@ -164,7 +165,7 @@ Rules:
 
 A note can last several steps. It is played as one held note.
 
-1.  Press the **Extend** button (top row button 8 on either pad). It lights bright teal.
+1.  Press the **Extend** button (top row button 8 on either pad). It flashes red and stays on until you press it again, so you can extend several notes in a row.
 2.  Press an existing note. It turns white.
 3.  Press a step in the **same lane**, before or after the note.
 
@@ -195,7 +196,7 @@ A track can play its steps forward, backward and in other orders.
     - **T3** ping-pong
     - **T4** random
     - **Prob** random walk
-3.  The mode applies to the whole track and the selection ends. To leave the selection without choosing, press **Mode** again. **Gate** switches Jump on or off (see below) and **Vel** switches [Key mode](#key-mode) on or off.
+3.  The mode applies to the whole track. Mode stays on (flashing red) so you can choose again; press **Mode** again to leave. A lane selected with its lane button stays selected (white) until you press it again. **Gate** switches Jump on or off (see below) and **Vel** cycles [Key mode](#key-mode).
 
 To give **one lane** its own mode, press **Mode**, press a lane button in the Pad B right column, then press a mode button. That lane now follows its own mode. Choosing a mode for the whole track clears all the lane settings of that track.
 
@@ -216,7 +217,7 @@ Every track has **8 patterns**. A pattern holds everything of the track (notes, 
 3.  Press a pattern to **cue** it: its LED flashes and it starts when the track's playhead returns to step 1 (every Length steps of that track's own speed). Press it again to switch **immediately**. Pressing the active pattern cancels a cue. While stopped, patterns switch at once.
 4.  To **copy**: press **Vel** (labelled Copy), then the destination pattern. The active pattern of that track (or of every track, in the bottom row) is copied there.
 
-Bright = active, flashing = cued, dim = contains notes. T1–T4 and Play work in pattern view; any other button leaves it. Patterns are saved with the session.
+Bright = active, flashing = cued, dim = contains notes. The **bottom row of Pad A** is a horizontal **brightness slider for the Launchpad LEDs** (leftmost pad dimmest, rightmost pad full; slide a finger across it). The on-screen pads are not dimmed. The setting is saved with the MIDI settings. T1–T4 and Play work in pattern view; Mode leaves it (T1–T4 select the track). Patterns are saved with the session.
 
 ### Drum maps
 
@@ -246,7 +247,7 @@ The map applies to **every track set to Drums**, to the sequencer and to the Key
 
 ### Mute mode
 
-Press **Mute** (Pad A top row, second button). It turns red and stays on until you press it again. Then press a target:
+Press **Mute** (Pad A top row, second button). It flashes red and stays on until you press it again. Then press a target:
 
 | Target                                        | Effect                                                        |
 |-----------------------------------------------|---------------------------------------------------------------|
@@ -272,13 +273,13 @@ Clear mode removes **notes only**. Velocity, gate, probability, mutes and loop r
 
 ### Key mode
 
-Key mode turns both pads into the same keyboards, so you can play the selected track's sound by hand. Press **Mode**, then **Vel** (labelled **Key**). Repeat to leave.
+Key mode turns both pads into the same keyboards, so you can play the selected track's sound by hand. Press **Mode**, then **Vel** (labelled **Key**). Keep pressing **Vel** while Mode is on to cycle (see below); press **Mode** again to switch Mode off.
 
 - Only the selected track is affected: its sequencer is switched off (its settings are kept) while all other tracks keep playing. Play / Stop still works. The mode belongs to the track and is saved with the session: each track is either in Key mode or in sequencer mode, and choosing a track with T1–T4 switches the pads to that track's mode.
 - Each pad shows **four keyboards of two rows** covering four octaves from the bottom up: white keys in the lower row (C D E F G A B C), black keys in the upper row above D, E, G, A and B (C♯, D♯, F♯, G♯, A♯, each one column to the right of its natural note; only on the Chromatic scale). The **second keyboard from the bottom** is the track's octave and is drawn in the track colour. Root keys are green (bright track colour in the current octave).
 - On a **diatonic scale** (or any scale except Chromatic) each keyboard is **one row of scale notes starting with the root at the left**; the upper row stays dark. On the **Drums** scale each pad becomes eight large drum pads, each four note pads wide and two high, in their own colours: lowest drum at the bottom left, highest at the top right (Pad A and Pad B show the same pads). A Pad A drum pad sounds while held. A Pad B drum pad is **retriggered in time with the track's step speed** (tempo and Tempo ÷) for as long as it is held; while the sequencer plays, the hits fall on its steps, otherwise they follow the BPM. The Oct buttons shift the drum notes. On the Chromatic scale the piano layout follows the Root.
-- **Pad A**: a note sounds as long as you hold the key. **Pad B**: keys are **latched**; press once to start a note, again to stop it. **Velocity** is set with the Pad B right column, which becomes a slider from 10 to 127 (default 100, each track keeps its own value). On the Drums scale Pad B does not latch (see above).
-- **Vel** (labelled **Drum** or **Keys** in Key mode) toggles between the keyboard and the drum pad layout. Drums scale tracks start with drum pads and flip to a piano keyboard; all other scales start with keyboards and flip to drum pads that play the scale's notes from the root (the eight lanes: C D E F G A B C on Chromatic), lowest at the bottom left. Only on the Drums scale do the pads use General MIDI drum notes. The choice is saved per track. To leave Key mode press **Mode**, then **Vel**.
+- **Pad A**: a note sounds as long as you hold the key. **Pad B**: keys are **latched**; press once to start a note, again to stop it. **Velocity** is set with the Pad B right column, which becomes a slider with the same 8 levels as the master velocity slider (16 to 127; default 100, each track keeps its own value). On the Drums scale Pad B does not latch (see above).
+- **Cycling:** while Mode is on, each press of **Vel** (labelled with the next state: **Keys**, **Drum** or **Seq**) steps through keyboard, drum pads and back to the sequencer. On the Drums scale the first press gives drum pads and the second a piano keyboard; on every other scale the first press gives the keyboard and the second drum pads that play the scale's notes from the root (the eight lanes: C D E F G A B C on Chromatic), lowest at the bottom left. Only on the Drums scale do the pads use General MIDI drum notes. While Mode is off, **Vel** does nothing in Key mode (velocity is the Pad B right column slider); in sequencer mode it opens the velocity view again.
 - The **top row of the grid** shows where the track's silent sequencer is: the playhead moves along it as a **red LED** (steps 1–8 on Pad A, 9–16 on Pad B) while the sequencer is playing.
 - Notes go to the track's channel and instrument output. **Mute** works as usual: press Mute, then T1–T4 to mute or unmute tracks (a muted track's keyboard is silent too). **Oct−** and **Oct+** change the track octave directly. **Scale** and **Root** buttons (Pad B top row) and the on-screen dropdowns work as usual. Notes stop when the track, scale, root, octave, channel or output changes, and when you leave Key mode. Other buttons are dark and do nothing.
 
@@ -297,7 +298,7 @@ Press **top row button 7** on either pad to swap their roles. The pad that showe
 ### Saving
 
 - **Automatic:** all settings, tracks and sequences are saved in the browser a moment after every change and restored when the page opens. If you were connected to MIDI, it reconnects.
-- **To a file:** **Save All** downloads MIDI settings and patterns (`twin-pad-all.json`), **Save MIDI** only the MIDI settings (`twin-pad-midi.json`: devices, Launchpad models, clock input, external clock, the drum map, and each track's output and channel) and **Save Ptn** only the patterns (`twin-pad-patterns.json`: everything else, including tempo, length and root). One **Load** button loads any of these files, and only the settings found in the file are changed. Use this for backups and for moving between computers, because the automatic copy belongs to one browser and one way of opening the page.
+- **To a file:** **Save All** downloads MIDI settings and patterns (`twin-pad-all.json`), **Save MIDI** only the MIDI settings (`twin-pad-midi.json`: devices, Launchpad models, clock input, external clock, the drum map, LED brightness, and each track's output and channel) and **Save Ptn** only the patterns (`twin-pad-patterns.json`: everything else, including tempo, length and root). One **Load** button loads any of these files, and only the settings found in the file are changed. Use this for backups and for moving between computers, because the automatic copy belongs to one browser and one way of opening the page.
 - **Not saved:** whether it is playing, the current mode or view, and the whole-app mute.
 
 ### External clock and start / stop
@@ -320,7 +321,7 @@ Press **top row button 7** on either pad to swap their roles. The pad that showe
 | A lane stays silent                                           | It may be muted (Mute mode shows red), or in a random mode its loop range may not contain the playhead.                                                                              |
 | Bottom-row pads do not toggle notes                           | Jump is on for the track (cyan bottom row). Press **Mode**, then **Gate** to switch it off.                                                                                          |
 | A track plays slower than the others                          | Its **Tempo ÷** is above 1.                                                                                                                                                          |
-| The pads show keyboards, the track is silent                  | Key mode is on for that track. Press **Mode**, then **Vel** to leave it.                                                                                                             |
+| The pads show keyboards, the track is silent                  | Key mode is on for that track. Press **Mode**, then **Vel** until the label shows the sequencer again.                                                                                                             |
 | Tempo does not change                                         | **External clock** is on and locks the BPM field.                                                                                                                                    |
 | Settings are gone after reopening                             | The page was opened differently (disk versus `localhost`) or the browser data was cleared. Use **Save** for backups.                                                                 |
 | Colours look different on a Launchpad                         | The original Launchpad (X-Y and Drum Mode) has only red and green. The Pro uses a lower colour resolution.                                                                           |
@@ -388,7 +389,7 @@ Numbers count from the left (top rows) or from the top (right columns). Labels i
 | 4 | T4 | Select track 4 | Random |
 | 5 | Prob | Open or close the probability view | Random walk |
 | 6 | Gate | Open or close the gate view | Jump on / off |
-| 7 | Vel | Open or close the velocity view. In Key mode: toggle keyboard / drum pad layout. | Key mode on / off |
+| 7 | Vel | Open or close the velocity view. Idle in Key mode. | Cycle keyboard / drum pads / sequencer |
 | 8 | Mode | Start stepping mode selection | Cancel |
 
 In mute mode the track buttons mute tracks, and in clear mode they clear tracks.
@@ -403,7 +404,7 @@ In mute mode the track buttons mute tracks, and in clear mode they clear tracks.
 | Clear mode | Clear the lane |
 | Velocity, gate or probability view | Master slider: set all steps to the button's level |
 | Sharp or flat mode (Chromatic) | Sharpen or flatten every note of the lane |
-| Key mode | Velocity slider for the keyboard: 10 to 127, default 100 |
+| Key mode | Velocity slider for the keyboard: same 8 levels as the master velocity slider (16 to 127), default 100 |
 
 **Note grid (both pads):** normally toggles notes. In the velocity, gate and probability views it sets the step's value. With Jump on, a held bottom-row pad holds the track on that step. In tempo divider mode the top four rows are one divider slider per track. In mute and clear mode the bottom row selects a step, and the other rows are ignored in clear mode. In Key mode both grids are keyboards (see [Key mode](#key-mode)).
 
@@ -508,10 +509,10 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 | Very dark blue | Inside a custom lane loop range |
 | Brighter blue | First and last step of a custom lane loop range |
 | Dark or faded | Beyond the sequence length |
-| Orange (bottom row) | Clear-step targets |
-| Cyan (bottom row) | Jump targets (Jump on) |
+| Orange, flashing (bottom row) | Clear-step targets |
+| Cyan, flashing (bottom row) | Jump targets (Jump on) |
 | Track colour bars (top four rows) | Tempo divider mode: a bar up to the divider, brightest at the value |
-| Red or green (bottom row) | Muted or active steps in mute mode |
+| Red or green, flashing (bottom row) | Muted or active steps in mute mode |
 | Dim blue-grey, dark (Key mode) | White keys and black keys; the current octave in the track colour; root keys green; a sounding key white |
 | Red, top grid row (Key mode) | Playhead of the track's sequencer |
 
@@ -520,14 +521,14 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 | Button | Colours |
 |---|---|
 | Play | Dim green (stopped), green (playing), red (whole-app mute), orange (clear mode) |
-| Mute | Dim yellow, red when mute mode is on |
+| Mute | Dim yellow, flashing red when mute mode is on |
 | Len−, Len+, BPM−, BPM+ | Blue |
-| Oct−, Oct+ | Teal |
+| Oct−, Oct+ | Teal, flashing red while armed |
 | Scale◀, Scale▶ | Amber |
 | Root−, Root+ | Purple. On a Chromatic track: ♭ is dim blue (bright blue in flat mode), ♯ is dim orange (bright orange in sharp mode). |
 | Swap | Dim orange, bright when swapped |
-| Extend | Dim teal, bright teal when armed |
-| BPM−, BPM+ (Pad B) | Yellow after Mode is pressed (press to enter tempo divider mode), cyan while in it |
+| Extend | Dim teal, flashing red when armed |
+| BPM−, BPM+, Scale◀, Scale▶, Root−, Root+ (Pad B) | Keep their colour and flash while Mode is on |
 | Logo | Dim red (Pad A role), dim green (Pad B role) |
 
 **Right columns**
@@ -535,12 +536,12 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 | Button | Colours |
 |---|---|
 | T1–T4 | Track colour, bright when selected. Red for muted tracks in mute mode, orange in clear mode. |
-| Stepping selection | Mode colours (forward green, reverse orange, ping-pong blue, random magenta, random walk yellow), brightest for the current mode |
-| Mode | Dim yellow-green, bright while the stepping selection is open |
-| Prob | Dim green, bright green when the view is open |
-| Gate | Dim blue, brighter when the view is open. In stepping selection: dim cyan (Jump off), bright cyan (Jump on) |
-| Vel | Dim orange, bright orange when the view is open. In stepping selection: Key, dim teal (bright while Key mode is on) |
-| Pad B lanes | Dim blue; blue for a custom loop; white while setting a loop; green or red in mute mode; mode colours in stepping selection; orange in clear mode |
+| Toggle buttons | Mute, Mode, Oct−, Oct+, Extend, ♭, ♯ and the open Vel, Gate or Prob view flash red while active. Second-function buttons (T1–T4, Prob, Gate, Vel, lane buttons) keep their colour and flash. |
+| Mode | Dim yellow-green, flashing red while Mode is on |
+| Prob | Dim green; flashing red when the view is open |
+| Gate | Dim blue; flashing red when the view is open |
+| Vel | Dim orange; flashing red when the view is open |
+| Pad B lanes | Dim blue; blue for a custom loop; white while setting a loop or for the lane chosen in Mode; green or red in mute mode (flashing); orange in clear mode |
 
 ### 9.9 Launchpad protocols
 
@@ -558,7 +559,7 @@ When the page closes, or when you change a pad's model, the pad is returned to i
 
 ### 9.10 Session file
 
-`twin-pad-all.json`, `twin-pad-midi.json` and `twin-pad-patterns.json` are plain JSON with the same fields, split in two groups. MIDI: `conn`, `sync`, `models`, `devs`, `dmap` and per track `ch` and `so`. Patterns: everything else. A file contains only the group it was saved for.
+`twin-pad-all.json`, `twin-pad-midi.json` and `twin-pad-patterns.json` are plain JSON with the same fields, split in two groups. MIDI: `conn`, `sync`, `models`, `devs`, `dmap`, `bri` (LED brightness 1–8) and per track `ch` and `so`. Patterns: everything else. A file contains only the group it was saved for.
 
 | Field                       | Content                                                           |
 |-----------------------------|-------------------------------------------------------------------|
@@ -570,6 +571,6 @@ When the page closes, or when you change a pad's model, the pad is returned to i
 | `dmap` | Custom drum map (`name` and `lanes` with `lane`, `label`, `note`, `channel`), or null for the default |
 | `tracks[]`                  | Four tracks, each with the fields below                           |
 
-Track fields: `scale`, `oct`, `ch`, `mute`, `so` (instrument output: ID and name, or null if never chosen), `div` (tempo divider 1–16), `rs` (root shift of this track, 0–11 semitones, added to the global root), `jmp` (Jump on or off), `pi` (active pattern 0–7), `pats` (8 stored patterns, null = empty), `km` (Key mode on or off), `kv` (Key mode velocity, 10–127), `lvel`, `lgate`, `lprob` (per-lane values, lane × 16 + step) with `fvel`, `fgate`, `fprob` (8 flags: the lane uses its own values), `no` (128 per-note octave offsets, lane × 16 + step), `loct` (8 per-lane octave offsets), `dir` (stepping mode 0–4), `ldir` (8 lane overrides, −1 = follow the track), `g` (16 step bitmasks, one bit per lane), `acc` (128 accidentals per note, −1 flat, 0 natural, +1 sharp, lane × 16 + step), `ln` (128 held-note lengths, lane × 16 + step), `vel`, `gate` and `prob` (16 values each), `sm` (16 step mutes), `lm` (8 lane mutes), `lo` and `hi` (8 lane loop starts and ends).
+Track fields: `scale`, `oct`, `ch`, `mute`, `so` (instrument output: ID and name, or null if never chosen), `div` (tempo divider 1–16), `rs` (root shift of this track, 0–11 semitones, added to the global root), `jmp` (Jump on or off), `pi` (active pattern 0–7), `pats` (8 stored patterns, null = empty), `km` (Key mode on or off), `kv` (Key mode velocity, 1–127), `lvel`, `lgate`, `lprob` (per-lane values, lane × 16 + step) with `fvel`, `fgate`, `fprob` (8 flags: the lane uses its own values), `no` (128 per-note octave offsets, lane × 16 + step), `loct` (8 per-lane octave offsets), `dir` (stepping mode 0–4), `ldir` (8 lane overrides, −1 = follow the track), `g` (16 step bitmasks, one bit per lane), `acc` (128 accidentals per note, −1 flat, 0 natural, +1 sharp, lane × 16 + step), `ln` (128 held-note lengths, lane × 16 + step), `vel`, `gate` and `prob` (16 values each), `sm` (16 step mutes), `lm` (8 lane mutes), `lo` and `hi` (8 lane loop starts and ends).
 
 Files from older versions load with defaults for anything that did not exist yet.
