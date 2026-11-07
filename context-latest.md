@@ -1,4 +1,10 @@
-# Twin Pad Sequencer: current context
+# Twin Pad Sequencer v10: current context
+
+Current as of v10 (2026-11-07, later session): musical tempo divisions, Div−/Div+ buttons, Mode then Len−/Len+, 1.5 s BPM hold (see "Session changes (v10, part 2)" at the end; it supersedes the integer tempo divider `div` and the old Len buttons described above).
+
+Current as of v10 (2026-11-07): BPM buttons show the tempo and step by 1 (see "Session changes (v10)" at the end). Everything below still applies.
+
+Current as of v09 (2026-11-06): Oct/Scale/Root selection buttons (see "Session changes (v09)" at the end; it supersedes the earlier octave arming `S.om`, the instant Scale/Root buttons, Mode+Root track-only root, the held character display and Play as master mute).
 
 Supersedes all earlier context files. Current as of the v06 session (2026-11-02): custom drum maps (see "Session changes (v06)"). Before that, the v05 session (2026-11-01): 8 patterns per track, the Key mode keyboard/drum pad layout toggle, per-lane velocity/gate/probability, and the split Save buttons (All, MIDI, Ptn) with partial Load. Earlier work: Pad A right column rearrangement and Jump (2026-10-30), per-track instrument output and tempo divider.
 
@@ -42,9 +48,9 @@ Dropdowns **Pad A model** and **Pad B model** (`#am`, `#bm`) belong to the physi
 ## Hardware map (logical pads; `S.swap` exchanges roles)
 Colours are the same on every model. Index 99 is the logo (dim red for Pad A, dim green for Pad B).
 
-**Pad A top row:** Play/Stop, Mute mode, Length −, Length +, Octave −, Octave +, Swap, Extend note. Oct−/Oct+ arm a target octave change; then press a note pad, a Pad B lane button, or T1–T4.
+**Pad A top row:** Play/Stop, Mute mode, Length −, Length +, Tempo −5, Tempo +5, Swap, Extend note. Oct−/Oct+ arm a target octave change; then press a note pad, a Pad B lane button, or T1–T4.
 
-**Pad B top row:** Tempo −5, Tempo +5, Scale previous, Scale next (after Mode: pattern view, labelled Pat), Root − (♭ on Chromatic), Root + (♯ on Chromatic), Swap, Extend note.
+**Pad B top row:** Octave −, Octave +, Scale previous, Scale next (after Mode: pattern view, labelled Pat), Root − (♭ on Chromatic), Root + (♯ on Chromatic), Swap, Extend note.
 
 **Pad A right column, top to bottom:** T1, T2, T3, T4, **Prob**, **Gate**, **Vel**, **Mode** (stepping modes; the bottom button; it was called "Step" earlier). Prob, Gate and Vel moved up one place when Mode moved to the bottom.
 
@@ -180,7 +186,7 @@ Edits by Python scripts with unique-anchor asserts, then a `new Function()` synt
 - Switching a track away from Drums while notes ring only silences the old channels on the next stop, mute or map change.
 
 ## Session changes (v07, 2026-11-04): toggle button behaviour
-Syntax checked only. Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual not yet updated).
+Syntax checked only. Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual updated).
 - **Toggles:** Mute (`S.mm`), Mode (`S.dm`), Oct−/Oct+ (`S.om`), Extend (`S.ext`), ♭/♯ (`S.am`) and the Vel/Gate/Prob views change state only when their own button is pressed. Nothing ends them any more: Mode stays on after a stepping mode, Jump, Root± or Key; Oct stays armed after a target; Extend re-arms after each extension. Pressing another toggle switches the active one off (`offAll()` clears `om`, `tdm`, `pm`, `pcp`, `dl`; each toggle function calls it first). Clear mode stays one-shot.
 - **Mode sub-views:** pattern view (`pm`) and tempo divider mode (`tdm`) now live inside Mode (`dm` stays true). In them T1–T4 select the track, Vel is Copy (pattern view), other right-column buttons are idle; Mode leaves both. A lane picked for a per-lane stepping mode (`dl`) stays selected until pressed again or Mode ends. Lane buttons are ignored while Extend is on.
 - **LEDs:** `topCol`/`rightCol` are wrappers around `topCol0`/`rightCol1`: an active toggle returns `RED()` (flashing red); second functions return `flc(colour)` (own colour pulsing). The old Mode colours (stepping colours, yellow/cyan BPM, Pat, Root, Jump, Key) were removed. The grid is never flashed. Phase `BL` (350 ms interval) now redraws whenever a toggle is active.
@@ -195,3 +201,55 @@ Syntax checked only. Files: `twin-pad-sequencer.html`, `manual.md`, `context.md`
 
 ### v07: Key velocity range
 The Key mode velocity slider (Pad B lane buttons) uses the same levels as the step velocity master slider: `round((r+1)*127/8)`, i.e. 16, 32 ... 127 (`ctrl` wrapper, `rightCol1`, `rightLbl`). `kv` is clamped 1–127 on load; old saved values show as the lit levels up to them. Syntax checked below.
+
+## Session changes (v08, 2026-11-05): character display, BPM/Oct swap
+Syntax checked only. Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual updated; the BPM/Oct positions and the display need adding there).
+- **Button swap:** BPM−/+ are now Pad A top row 5/6, Oct−/+ Pad B top row 1/2. Implemented by remapping `(i,k)` at the top of the `ctrl0` top-row block (Pad A 5/6 <-> Pad B 1/2), so all old BPM/Oct logic is unchanged; `TL`/`TT`, `topCol`, `topCol0`, `topLbl` (Div label on Pad A 5/6), the Key mode wrapper (Oct direct on Pad B 1/2) were adjusted. LED base colours stay with the positions (Pad A 5/6 teal, Pad B 1/2 blue); armed Oct and active Mode flashes follow the functions.
+- **Character display:** `S.gl` (`null` or `{i:1,c:'C#'}`, not saved). `FNT` 3x5 font (upper case, `r` lower case for Dr, `-`, `+`, `#`), `glOn(r,k)`, `RN`, `SAB` (scale abbreviations), `glyphFor(i,n)`. Glyph rows 5..1, columns 0-2 and 4-6. `ctrl` is now a wrapper: `ctrlX` (old `ctrl`) then `glyphFor`; `ctrlUp` ends the display (hardware release via `onPad` `m.up`, on-screen `pointerup/cancel/leave`, 700 ms after a keyboard click, window blur). `led` overrides the whole grid of the logical pad; `draw` overrides its cells (not shown in on-screen slider views). Triggers: Pad B Scale◀/▶ (not after Mode, where they open pattern view) and Root−/+ (also after Mode, showing `eff(t)`; not on Chromatic where they are ♭/♯, except in Key mode). Sharps only (`C#`).
+- **Open:** release events for edge buttons on every Launchpad model are untested; display not seen on hardware.
+
+
+## Session changes (v09, 2026-11-06): selection buttons
+Edits by Python scripts with unique-anchor asserts, then a `new Function()` syntax check. **Syntax checked only, nothing tested in a browser or on hardware.** Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual updated).
+- **State:** `S.sv` = `null` or `{k:'oct'|'scl'|'root', v}`. Oct: `v` = octave delta −3..+3 (starts 0). Scale: `v` = index in `SN` (starts at the selected track's scale, wraps). Root: `v` = accumulated semitone steps from the selected track's effective root. `S.om` is gone.
+- **Functions (before `mm`):** `selStart(k,d)` (clears other modes, steps the selection, `glSet`, render), `glSet` (sets `S.gl` for Pad B), `selEnd`, `rootBy(list,sd,glob)`, `selApply(w,a,b)` with w = `pad|lane|track|all`.
+- **Buttons:** Pad B top 1/2 Oct, 3/4 Scale, 5/6 Root (post-remap roles unchanged inside `ctrl1`). `ctrl0` is now a head: with `S.sv` it routes destinations (Extend = All, T1–T4 = track, Pad B lane buttons for Oct only), lets Oct/Scale/Root buttons through, and ends the selection on any other button before `ctrl1` (the old `ctrl0` body) runs. `pressPad`: Oct applies to the note, or to the whole step (all notes in that column) for an empty pad; for Scale/Root a pad press only ends the selection. Mode then Scale still opens pattern view; Mode then Root starts a root selection (Mode ends); on Chromatic, Root buttons are ♭/♯ unless Mode is on.
+- **Apply:** Oct adds the delta to note `no`, lane `loct` or track `oct` (clamped ±3). Scale sets the scale of the track or all tracks. Root: track = that track's `rs` shifted; All = `S.root` shifted (all tracks move by the same interval); octave carry `floor((eff+sd)/12)` (Drums skipped).
+- **Display:** persistent while `S.sv` is set (`glyphFor` removed, `ctrlUp` is empty). `FNT` has digits 0–3. Oct: sign char (+, -, blank) and digit.
+- **Mute all:** Extend (top row 8, both pads) replaces Play while mute mode is on (`toggleAll`; Key mode lets Extend through when `S.mm||S.sv`). Play no longer turns red; Extend is red while `S.mall`, green/red flashing in mute mode, label "All" in mute mode and during a selection. Clear mode still uses Play for "clear everything".
+- **LEDs:** the active selection's buttons flash red; T1–T4, Extend (and lane buttons for Oct) flash as second functions.
+- **Open:** untested on hardware. Pad presses during Scale/Root selection cancel without toggling a note (by design, to avoid accidental edits). Root selection on All tracks shifts rather than sets an identical root.
+- **Drums excluded:** `selApply` with All skips tracks whose scale is Drums for Oct and Scale; `rootBy` already skips the octave carry for Drums (root has no effect on drum pitch). A single-track destination still applies to a Drums track.
+- **Display timeout:** `glSet` restarts a 2 s timer (`glT`) that clears `S.gl` and renders; `S.sv` stays active (buttons keep flashing, destinations still work). Each Oct/Scale/Root press shows the display again.
+- **Brightness slider moved:** the LED brightness slider (`S.bri`, `briCol`) is now the bottom row of Pad A in tempo divider view (`S.tdm`, set in `pressPad`; `padSend` exempts `PEX` while `S.tdm`), no longer in pattern view (bottom rows there are dark). Pad B's bottom row stays dark in divider view.
+- **Playhead reset cue:** Mode then Mute (`ctrl1` `k===2` with `S.dm` → `rstCue`, toggle) sets `rc[ti]` (all tracks, not saved). In `sched`, when `rc[ti]&&tc[ti]%S.len===0` (`rst`, same moment as pattern cues) the flag is consumed: shared-playhead modes restart at step 1 (`ts=0`); every other lane gets `pos=0`, `pdir=1`, and `fr[ti][r]=1` if its range does not start at step 0. A free lane (`fr`, modes forward/reverse/ping-pong only) steps with `freeNext` over the whole length and plays its notes until the step falls inside `[el,eh]`, then `fr=0` and normal `nextStep` resumes. Jump holds win over the reset; `fr` is cleared by `play` (not Continue), `patSwitch`, shared modes and own random lanes. Mute shows label Reset in Mode and flashes white while a reset is cued. Syntax checked only.
+
+
+## Session changes (v10, 2026-11-07): BPM display and fine steps
+Edits by Python script with unique-anchor asserts, then a `new Function()` syntax check. **Syntax checked only, not tested in a browser or on hardware.** Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual updated).
+- **Press:** BPM−/BPM+ (Pad A top row 5/6, `ctrl1` `bpmPress(-1|1)`) change `S.bpm` by 1 (was 5) and call `bpmShow`. The `S.dm` (tempo divider) behaviour is unchanged; Key mode still greys the buttons out.
+- **Hold:** `bpmPress` starts a 2000 ms timeout; then `bpmStep(d*10)` fires at once and every 500 ms (`bh` = `{t,iv}`) until `bpmHoldStop`. `ctrlUp` (hardware release via `onPad` `m.up`, on-screen `pointerup/cancel/leave`, 700 ms after a keyboard click, window blur) calls `bpmHoldStop`, so any edge-button release ends a hold. `setBpm` clamps 30–300.
+- **External clock (`S.sync`):** no change and no hold timers; `bpmShow` displays the measured tempo `round(2500/ivl)` (or `S.bpm` before any clock pulse).
+- **Display:** `S.gl={b:bpm}` (selection displays use `{i:1,c}`). `glPad(i)` says whether a pad is overridden (BPM: both pads, selections: Pad B); `glOn(r,k,i)` draws: Pad A hundreds digit in columns 5–7 (blank below 100), Pad B tens in columns 0–2 and ones in 4–6, rows 1–5. `FNT` now has digits 0–9. Every change restarts the 2 s timer (`glT`); `led` and `draw` use `glPad`/`glOn` with the logical pad index.
+- **Open:** hold timing and release detection on each Launchpad model are untested; on-screen slider views do not show the display (as with selections).
+
+
+## Session changes (v10, part 2, 2026-11-07): musical tempo divisions
+Python script edits with unique-anchor asserts, then a `new Function()` syntax check. **Syntax checked only, untested in a browser or on hardware.** Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual updated).
+- **BPM hold:** now 1500 ms before the ±10 repeat starts (`bpmPress`), then every 500 ms.
+- **Divisions:** `DV` = 12 entries `{l,u}` sorted fast to slow: 32T, 32, 16T, 32D, 16, 8T, 16D, 8, 4T, 8D, 4, 4D; `u` = step length in twelfths of a 16th (4, 6, 8, 9, 12, 16, 18, 24, 32, 36, 48, 72). Assumption: the range "32nd to 4" means 1/32 to quarter notes, each with T and D variants. Track field is now `dv` (index, default 4 = 16th) instead of `div`; saved as `dv`. `odv(n)` converts old `div` 1–16 (nearest `u`; 1→16, 2→8, 3→8D, 4→4, 5+→4/4D). Patterns store `dv` (`PS`, `blank`, `pdes`, `ser`, `apply`).
+- **Scheduler:** `sched(cnt,t,d)` is still called once per 16th. For each track it fires every event at positions p = multiples of `u` inside [12*cnt, 12*cnt+12) by calling `trkEvt(tr,ti,time,dd)` (the old body of the per-track map; `dd=d*u/12`), with sub-step timestamps `t+(p-a)/12*d`. No event = playhead returned unchanged. All tracks share one grid counted from the start; changing a divider never restarts playback. Key mode drum repeat (`kRepFire`) is called per event; the stopped-state retrigger interval uses `15000/bpm*u/12`.
+- **Buttons:** Pad A top row 3/4 are Div−/Div+ (`ctrl1`: `selStart('div',∓1)`); with Mode on (`S.dm`) they are Len−/Len+ (`setLen`). They flash as second functions in Mode (`topCol`), labels via `topLbl`/`topTtl`/`TL`/`TT`. Mode then BPM± still opens the divider slider view (now 12 positions: columns 1–12 of the 16 across both pads, `pressPad` sets `dv=step`, cells show the label); the LED brightness slider is unchanged.
+- **Selection:** `S.sv={k:'div',v}` (index, starts at the selected track's `dv`, clamped 0–11, − faster, + slower). Destinations: T1–T4 = that track, Extend = all tracks **including drums** (`selApply`). The Div buttons are `sb` pass-through buttons in `ctrl0` (other selections switch to Div). Red flashing for Pad A 3/4 while selected; the Root branch of the flash test now checks `S.sv.k==='root'`.
+- **Display:** `S.gl={b:label}` (same two-pad layout as the BPM display, right-aligned: first character on Pad A columns 5–7, others on Pad B columns 0–2 and 4–6), 2 s timer `glT`. `FNT` gained `T`.
+- **Settings row:** the Tempo ÷ dropdown lists the 12 labels (value = index).
+- **Open:** sub-step timing at fast divisions (32T = 1/3 step) with many tracks and sysex-sized LED updates is untested; very fast divisions give short gates (`min(dd*gate,dd-1)`).
+
+### v10 fix: steady playhead display for triplets and dotted notes
+`sched` no longer returns per-step positions. It collects every track event of the step, sorts them by time and pushes one display snapshot per event to `q` at the event's exact time (`dispCur` = current playhead per track, reset in `play`); `tick` and `onClock` just call `sched`. Before, one snapshot per 16th step showed only the last event, so the playhead skipped steps and moved irregularly on triplets and dotted notes, although the MIDI timestamps were already steady (checked with a jsdom simulation of `sched`). Syntax and simulation only; not tested on hardware.
+
+### v10 (part 3): old tempo divider sliders removed, Opt view
+Version stays v10. Mode, then BPM−/+ (Pad A top row 5/6, labelled **Opt**, title "Options (LED brightness)") still sets `S.tdm`, but the view now holds only the LED brightness slider (bottom row of Pad A, `briCol`, `PEX` exempt from dimming); the four top-row track sliders, their `pressPad` branch, LEDs and on-screen bars/labels are gone. `tdm` keeps its name in code (T1–T4 still select the track in it, Mode leaves). Tempo dividers are now set only by Div−/Div+ plus a track button or Extend, or the Tempo ÷ dropdown. Manual (`manual.md`, `index.html`) and the in-app help were updated. Syntax checked only.
+
+### v10 (part 4): tempo divisions up to two whole notes
+`DV` now has 20 entries (u in twelfths of a 16th): 32T 4, 32 6, 16T 8, 32D 9, 16 12, 8T 16, 16D 18, 8 24, 4T 32, 8D 36, 4 48, 2T 64, 4D 72, 2 96, *1T 128, 2D 144, *1 192, *2T 256, *1D 288, *2 384. Whole notes and above are labelled with a leading `*` (`*1` = whole note, `*2` = two whole notes; plain `2` = half note); no dotted two-whole-note value. `FNT` has a small `*`. Default index stays 4 (16th). Saved sessions and patterns now store `du` (the `u` value) so the list can change; `dvLoad` also reads the earlier `dv` index (old 12-value list, `OLDU`) and the original `div` 1–16. Selection and dropdown use `DV.length`. Manual, index and help updated. Syntax checked only.
