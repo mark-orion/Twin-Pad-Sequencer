@@ -1,4 +1,4 @@
-# Twin Pad Sequencer v10: Manual
+# Twin Pad Sequencer v11: Manual
 
 Twin Pad Sequencer is a step sequencer that runs in your web browser and can be controlled via the web interface or up to two Novation Launchpads. It sends MIDI notes to a synthesizer or DAW. This manual first explains how to use it, then ends with a detailed reference.
 
@@ -78,7 +78,7 @@ From top to bottom:
     - **External clock** toggle button.
     - **Length** of the sequence in steps.
     - **Save All**, **Save MIDI**, **Save Ptn** and **Load** buttons.
-4.  **Settings row** for the selected track: **Scale**, **Root**, **Octave**, **Tempo ÷**, **Instrument output**, **Channel**, then **CLR** (clear mode) and **RND** (randomize).
+4.  **Settings row** for the selected track: **Scale**, **Root**, **Octave**, **Tempo ÷**, **Instrument output**, **Channel**, then **RND** (randomize).
 5.  **The two pads.** Each pad on screen copies a Launchpad:
     - a **top row** of 8 buttons with a small cell for the **logo** at its right,
     - the **8×8 note grid**,
@@ -86,6 +86,7 @@ From top to bottom:
 
     Buttons show the same functions and the same LED colours as the hardware, and you click or tap them like the hardware buttons.
 6.  **Hardware controls:** a collapsible help section at the bottom.
+7.  **RESET** (bottom right corner): after a confirmation it clears everything (patterns, MIDI and all other settings) and deletes the autosaved data, so the app starts as on its first load. Save your work first if you want to keep it.
 
 On a phone in portrait, the two pads are stacked. On a tablet or desktop they sit side by side. On a phone in landscape both pads fit next to each other under the top bar.
 
@@ -113,9 +114,9 @@ On a phone in portrait, the two pads are stacked. On a tablet or desktop they si
 
 - **Scale** (per track): the **Scale** dropdown or Pad B top row buttons 3 and 4 (select previous / next, then apply; see [Selection buttons](#selection-buttons-oct-scale-root)). Lanes are scale degrees from the root up. **Drums** maps the 8 lanes to General MIDI drum notes.
 - **Root** (per track, shifted from a global root): the **Root** dropdown (it shows the selected track's root, moves all tracks together) or Pad B top row buttons 5 and 6, which select a root and apply it to a track or all tracks (see [Selection buttons](#selection-buttons-oct-scale-root)). On a track set to **Chromatic** those buttons are ♭ and ♯ (see [Chromatic scale](#chromatic-scale-sharps-and-flats)); press **Mode** first to get the root selection there. Lanes that are the root note have a dark green background (not in Drums). **Octave carry:** when a root passes from B to C the track's octave goes up by 1, from C to B down by 1 (limit ±3, Drums excluded).
-- **Octave** (per track, −3 to +3): the **Octave** dropdown, or Pad B top row buttons 1 and 2 (**Oct−/Oct+**), which select an octave change and apply it to a note, step, lane, track or all tracks (see [Selection buttons](#selection-buttons-oct-scale-root)). Note-specific octave changes reset when the note is switched off and on again.
+- **Octave** (per track, −3 to +3): the **Octave** dropdown, or Pad B top row buttons 1 and 2 (**Oct−/Oct+**), which select an octave change and apply it to a note, step, lane, track or all tracks (see [Selection buttons](#selection-buttons-oct-scale-root)). The sounding octave shift of a note is the sum of four tiers: note + lane + track + All (±3 each). Each tier value is **absolute**, not cumulative: applying +1 twice gives +1, and 0 resets that element. Note-specific values reset when the note is switched off and on again.
 - **Tempo ÷** (per track, default 16): the note value of one step of the track. There are 20 divisions from 32nd notes to two whole notes, with triplets (T) and dotted notes (D), from fast to slow: 32T, 32, 16T, 32D, 16, 8T, 16D, 8, 4T, 8D, 4, 2T, 4D, 2, *1T, 2D, *1, *2T, *1D, *2. Whole notes are shown with an asterisk in front (*1 = one whole note, *2 = two whole notes); 2 is a half note. 16 (sixteenth notes) is the normal speed. Notes and gates stretch with it. Tracks stay locked to the same clock, and the divider never restarts playback. **Div−/Div+ buttons** (Pad A top row 3 and 4, a selection like Oct): each press selects the next faster (−) or slower (+) division and shows it for 2 seconds on both pads; then press a track button T1–T4 to assign it to that track, or **Extend** (All) to assign it to all four tracks, drums included.
-- **Options (LED brightness):** press **Mode**, then **BPM−** or **BPM+** (Pad A top row, buttons 5 and 6, which show Opt). The bottom row of Pad A becomes a horizontal **brightness slider for the Launchpad LEDs** (leftmost pad dimmest, rightmost pad full); the rest of the pads is dark. T1–T4 select the track. The on-screen pads are not dimmed. The setting is saved with the MIDI settings. Press **Mode** again to leave.
+- **Options (LED brightness, MIDI channel):** press **Mode**, then **BPM−** or **BPM+** (Pad A top row, buttons 5 and 6, which show Opt). The bottom row of Pad A becomes a horizontal **brightness slider for the Launchpad LEDs** (leftmost pad dimmest, rightmost pad full). The four grid rows above the middle become **MIDI channel sliders**, one row per track (top row = T1 … fourth row = T4), spanning both pads: the leftmost pad is channel 1 (Pad A 1–8), the rightmost channel 16 (Pad B 9–16). The rest is dark. T1–T4 select the track. The on-screen pads are not dimmed. The setting is saved with the MIDI settings. Press **Mode** again to leave.
 - **Instrument output** (per track): the MIDI output this track plays to. Choose a different device per track to play several instruments at once. The default is the first port that is not a Launchpad. Changing it sends all-notes-off to the old device.
 - **Channel** (per track, 1–16): the **Channel** dropdown. Drums use channel 10 by default.
 
@@ -134,7 +135,7 @@ On a phone in portrait, the two pads are stacked. On a tablet or desktop they si
 | T1–T4 | That track | That track | That track |
 | **Extend** (shows All) | All tracks | All tracks | All tracks, moved by the same interval |
 
-Octave values are added to the existing ones (limit ±3 per level). **All tracks** (Extend) skips tracks set to Drums for octave, scale and root; the tempo divider (Div) is applied to all tracks including drums. Any other button ends the selection and then does its normal job; a pad press that is not an Oct destination just ends it. After **Mode**, Scale◀/▶ open pattern view and Root−/+ start a root selection (Mode ends).
+Octave values are absolute (see above). Elements with a non-zero value are marked: notes and lanes magenta, track buttons violet; the colour returns when the value is set to 0. **All** (Extend) sets the global octave value (not applied to Drums tracks) and skips Drums tracks for scale and root; the tempo divider (Div) is applied to all tracks including drums. Any other button ends the selection and then does its normal job; a pad press that is not an Oct destination just ends it. After **Mode**, Scale◀/▶ open pattern view and Root−/+ start a root selection (Mode ends).
 
 ### Sequence length
 
@@ -224,9 +225,9 @@ How the modes behave:
 - **Random** and **random walk** move **one playhead for the whole track**. All lanes play that step if it lies inside their loop range, so the range works as a filter. Random walk moves one step up or down at random and wraps around.
 - A lane with its own random mode moves its own playhead.
 
-**Jump:** press **Mode**, then **Gate** to switch Jump on (or off again) for the selected track. While Jump is on, the bottom row of the note grid glows cyan and the track’s current stepping mode keeps running. **Hold** a bottom-row pad to hold the track’s playhead on that step: the step is played again on every tick for as long as the pad is down. When you let go, the track carries on in its stepping mode from that step. If you hold several pads, the last one pressed counts. A lane whose loop range does not contain that step ignores the hold and runs on as before. While Jump is on, the bottom row no longer toggles notes (switch Jump off to edit them). Jump needs the sequencer to be playing, and each track has its own Jump switch.
+**Jump:** press **Mode**, then **Gate** to switch Jump on (or off again) for the selected track. While Jump is on, the bottom row of the note grid glows cyan and the track’s current stepping mode keeps running. **Hold** a bottom-row pad to hold the track’s playhead on that step: the step is played again on every tick for as long as the pad is down. When you let go, the track carries on in its stepping mode from that step. If you hold several pads, the last one pressed counts. A lane whose loop range does not contain that step ignores the hold and runs on as before. While Jump is on, the bottom row no longer toggles notes (switch Jump off to edit them). Jump needs the sequencer to be playing, and each track has its own Jump switch. With Jump on, **Extend** (labelled All, red while active) toggles **Jump all**: a held bottom-row pad then holds the playhead of all four tracks on that step. Jump all ends when Jump is switched off.
 
-**Playhead reset:** press **Mode**, then **Mute** (labelled Reset) to cue a reset for all tracks; press it again to cancel the cue. When a track next loops to step 1 (every Length steps of its own speed), every lane jumps to step 1, including lanes with their own loop range. The track then carries on in its stepping mode; a lane whose loop range does not start at step 1 runs freely along the track until it reaches its range, and from then on loops within that range again. In the random modes the shared playhead restarts at step 1 and lanes outside their range stay silent as usual. The cue is not saved; while it is pending, Mute flashes white when Mode is on.
+**Playhead reset:** press **Mode**, then **Mute** (labelled Reset) to cue a reset for the **selected track**. To cue **all tracks**, press **Mode**, then **Extend** (labelled All, flashes red), then **Mute**: when the selected track next loops, every lane of every track jumps to step 1. Press again to cancel. When a track next loops to step 1 (every Length steps of its own speed), every lane jumps to step 1, including lanes with their own loop range. The track then carries on in its stepping mode; a lane whose loop range does not start at step 1 runs freely along the track until it reaches its range, and from then on loops within that range again. In the random modes the shared playhead restarts at step 1 and lanes outside their range stay silent as usual. The cue is not saved; while it is pending, Mute flashes white when Mode is on.
 
 ### Patterns
 
@@ -280,16 +281,16 @@ Muted things show red, active ones green. Muted notes are dimmed on the grid.
 
 ### Clear mode
 
-Click **CLR** on screen (it has no hardware button). It turns orange, and so do the possible targets. Press one target and the mode ends:
+Press **Mode**, then **Oct−** (Pad B top row, button 1; labelled CLR while Mode is on) to switch clear mode on. Oct−, the track buttons, the lane buttons, Extend and the bottom row of the note grid flash red. Press one target and the mode ends. Press **Oct−** again to cancel clear mode; any other button cancels it and then does its normal job:
 
 | Target                                 | Effect                                             |
 |----------------------------------------|----------------------------------------------------|
 | A **track** button T1–T4               | Clears that track                                  |
 | A **lane** button (Pad B right column) | Clears that lane of the selected track             |
 | A **bottom-row pad**                   | Clears that step (all lanes) of the selected track |
-| The **Play** button                    | Clears every track                                 |
+| The **Extend** button (labelled All) | Clears every track |
 
-Clear mode removes **notes only**. Velocity, gate, probability, mutes and loop ranges stay. A held note that covers a cleared step is shortened. Other pad presses are ignored while clear mode is on. Click **CLR** again to cancel.
+Clear mode removes **notes only**. Velocity, gate, probability, mutes and loop ranges stay. A held note that covers a cleared step is shortened. Other pad presses are ignored while clear mode is on.
 
 ### Key mode
 
@@ -331,6 +332,7 @@ While an **Oct, Scale or Root selection** is active (see [Selection buttons](#se
 - **Automatic:** all settings, tracks and sequences are saved in the browser a moment after every change and restored when the page opens. If you were connected to MIDI, it reconnects.
 - **To a file:** **Save All** downloads MIDI settings and patterns (`twin-pad-all.json`), **Save MIDI** only the MIDI settings (`twin-pad-midi.json`: devices, Launchpad models, clock input, external clock, the drum map, LED brightness, and each track's output and channel) and **Save Ptn** only the patterns (`twin-pad-patterns.json`: everything else, including tempo, length and root). One **Load** button loads any of these files, and only the settings found in the file are changed. Use this for backups and for moving between computers, because the automatic copy belongs to one browser and one way of opening the page.
 - **Not saved:** whether it is playing, the current mode or view, and the whole-app mute.
+- **Reset:** the **RESET** button (bottom right of the page) deletes the autosaved data and all settings after a confirmation.
 
 ### External clock and start / stop
 
@@ -370,7 +372,7 @@ While an **Oct, Scale or Root selection** is active (see [Selection buttons](#se
 | Velocity per step    | 100                                             | 1–127                   |
 | Gate length per step | 50%                                             | 1–100%                  |
 | Probability per step | 100%                                            | 0–100%                  |
-| Octave per track     | 0 (track 2: +1, track 3: −1)                    | −3 to +3                |
+| Octave per track     | 0                    | −3 to +3                |
 | Channel              | Track 1: 1, track 2: 2, track 3: 3, track 4: 10 | 1–16                    |
 | Tempo divider        | 16 (sixteenth notes)                            | 32T … *2 (20 values)    |
 | Instrument output    | First port that is not a Launchpad (per track)  | any MIDI output or none |
@@ -388,27 +390,27 @@ Numbers count from the left (top rows) or from the top (right columns). Labels i
 
 | # | Button | Function |
 |---|---|---|
-| 1 | Play / Stop | Start or stop. In clear mode: clear everything. |
+| 1 | Play / Stop | Start or stop. In clear mode: cancels it. |
 | 2 | Mute | Toggle mute mode. After Mode (labelled Reset): cue a playhead reset. |
 | 3 | Div− (Len− after Mode) | Select the next faster tempo division (shown on both pads); then press a track button or Extend (all tracks). After Mode: shorten the sequence by one step. |
 | 4 | Div+ (Len+ after Mode) | Select the next slower tempo division; then press a track button or Extend (all tracks). After Mode: lengthen the sequence by one step. |
 | 5 | BPM− | Tempo −1 (hold over 1.5 s: −10 every 0.5 s); shows the tempo. After Mode (labelled Opt): options view (LED brightness). |
 | 6 | BPM+ | Tempo +1 (hold over 1.5 s: +10 every 0.5 s); shows the tempo. After Mode (labelled Opt): options view (LED brightness). |
 | 7 | Swap | Swap the two pads |
-| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. |
+| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all. |
 
 **Pad B top row**
 
 | # | Button | Function |
 |---|---|---|
-| 1 | Oct− | Octave selection −1 (shown on Pad B); then press a note, empty pad (step), lane, track or Extend (all) |
+| 1 | Oct− | Octave selection −1 (shown on Pad B); then press a note, empty pad (step), lane, track or Extend (all). After Mode (labelled CLR): clear mode. |
 | 2 | Oct+ | Octave selection +1; then choose the destination as for Oct− |
 | 3 | Scale◀ | Select the previous scale; then press a track button or Extend (all). After Mode: pattern view. |
 | 4 | Scale▶ | Select the next scale; then press a track button or Extend (all). After Mode: pattern view. |
 | 5 | Root− (♭ on Chromatic) | Select root −1 semitone; then press a track button or Extend (all). On a Chromatic track: toggle flat mode (after Mode: root selection). |
 | 6 | Root+ (♯ on Chromatic) | Select root +1 semitone; then press a track button or Extend (all). On a Chromatic track: toggle sharp mode (after Mode: root selection). |
 | 7 | Swap | Swap the two pads |
-| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. |
+| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all. |
 
 **Pad A right column**
 
@@ -459,7 +461,6 @@ In mute mode the track buttons mute tracks, in clear mode they clear tracks, and
 | Instrument output                                | MIDI output of the selected track                                                                   |
 | Oct− / Oct+ | Select the octave change, then a note, step, lane, track or All |
 | Channel                                          | MIDI channel of the selected track                                                                  |
-| CLR                                              | Clear mode                                                                                          |
 | RND                                              | Randomize the selected track                                                                        |
 | On-screen top rows, logo cells and right columns | Same as the hardware                                                                                |
 | Velocity, gate and probability sliders           | Exact values, drawable across steps                                                                 |
@@ -517,7 +518,7 @@ Jump is a per-track switch on top of the stepping mode. A held bottom-row pad ke
 - **Resolution:** one step is a 16th note. At tempo *T* a step lasts 15000 / *T* milliseconds.
 - **Tempo divider:** one step of a track lasts the note value of its divider: *u* × 1250 / *T* milliseconds, with *u* = 4 (32T), 6 (32), 8 (16T), 9 (32D), 12 (16), 16 (8T), 18 (16D), 24 (8), 32 (4T), 36 (8D), 48 (4), 64 (2T), 72 (4D), 96 (2), 128 (*1T), 144 (2D), 192 (*1), 256 (*2T), 288 (*1D), 384 (*2). Gate length and held notes use that step. All tracks fire on one common grid counted from the start of the sequence.
 - **Output:** every track sends to its own instrument output.
-- **Scheduling:** notes are scheduled ahead with Web MIDI timestamps for steady timing.
+- **Scheduling:** notes are scheduled ahead with Web MIDI timestamps for steady timing. The scheduler runs in a Web Worker timer, so playback continues at full accuracy when the tab loses focus or the browser is minimized (the lookahead grows from 120 ms to 500 ms while hidden, and the Launchpad LEDs keep updating). Only the on-screen display pauses.
 - **Note on:** channel = the track's channel, note = lane pitch, velocity = the step's velocity.
 - **Note off:** single-step notes end at the gate share of the step, but at least 1 ms before the next step. Held notes end 0.1 step before the end of their last step.
 - **Whole-app mute and stop:** send all-notes-off (CC 123) on the channels in use.
@@ -541,7 +542,7 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 | Very dark blue | Inside a custom lane loop range |
 | Brighter blue | First and last step of a custom lane loop range |
 | Dark or faded | Beyond the sequence length |
-| Orange, flashing (bottom row) | Clear-step targets |
+| Red, flashing (bottom row) | Clear-step targets (clear mode) |
 | Cyan, flashing (bottom row) | Jump targets (Jump on) |
 | White and grey bar (bottom row of Pad A) | Options view: LED brightness slider, brightest pad at the value |
 | Red or green, flashing (bottom row) | Muted or active steps in mute mode |
@@ -552,14 +553,14 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 
 | Button | Colours |
 |---|---|
-| Play | Dim green (stopped), green (playing), orange (clear mode) |
+| Play | Dim green (stopped), green (playing) |
 | Mute | Dim yellow, flashing red when mute mode is on |
-| Div−, Div+ (Pad A), Oct−, Oct+ (Pad B top row 1–2) | Blue. Oct−/Oct+ flash red while an octave selection is active |
+| Div−, Div+ (Pad A), Oct−, Oct+ (Pad B top row 1–2) | Blue. Oct−/Oct+ flash red while an octave selection is active; Oct− also flashes red in clear mode |
 | BPM−, BPM+ (Pad A top row 5–6) | Teal. Colours stay with the button positions, not the functions |
 | Scale◀, Scale▶ | Amber |
 | Root−, Root+ | Purple. On a Chromatic track: ♭ is dim blue (bright blue in flat mode), ♯ is dim orange (bright orange in sharp mode). |
 | Swap | Dim orange, bright when swapped |
-| Extend | Dim teal, flashing red when armed. Flashes in mute mode and during a selection (All); red when the whole app is muted |
+| Extend | Dim teal, flashing red when armed. Flashes in mute mode and during a selection (All); red when the whole app is muted; flashing red in clear mode |
 | BPM−, BPM+ (Pad A), Scale◀, Scale▶, Root−, Root+ (Pad B) | Keep their colour and flash while Mode is on |
 | Logo | Dim red (Pad A role), dim green (Pad B role) |
 
@@ -567,13 +568,13 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 
 | Button | Colours |
 |---|---|
-| T1–T4 | Track colour, bright when selected. Red for muted tracks in mute mode, orange in clear mode. |
+| T1–T4 | Track colour, bright when selected. Red for muted tracks in mute mode, flashing red in clear mode. |
 | Toggle buttons | Mute, Mode, Extend, ♭, ♯, the active Oct, Scale or Root selection and the open Vel, Gate or Prob view flash red while active. Second-function buttons (T1–T4, Prob, Gate, Vel, lane buttons) keep their colour and flash. |
 | Mode | Dim yellow-green, flashing red while Mode is on |
 | Prob | Dim green; flashing red when the view is open |
 | Gate | Dim blue; flashing red when the view is open |
 | Vel | Dim orange; flashing red when the view is open |
-| Pad B lanes | Dim blue; blue for a custom loop; white while setting a loop or for the lane chosen in Mode; green or red in mute mode (flashing); orange in clear mode |
+| Pad B lanes | Dim blue; blue for a custom loop; white while setting a loop or for the lane chosen in Mode; green or red in mute mode (flashing); flashing red in clear mode |
 
 ### 9.9 Launchpad protocols
 
@@ -595,7 +596,7 @@ When the page closes, or when you change a pad's model, the pad is returned to i
 
 | Field                       | Content                                                           |
 |-----------------------------|-------------------------------------------------------------------|
-| `bpm`, `root`, `sel`, `len` | Tempo, root note (0–11), selected track (0–3), sequence length    |
+| `bpm`, `root`, `sel`, `len`, `oa` | Tempo, root note (0–11), selected track (0–3), sequence length, global octave shift (−3 to +3)    |
 | `sync`, `swap`              | External clock and swap state                                     |
 | `models`                    | Launchpad models of pad A and B (`mk3`, `x`, `pro`, `xy`, `drum`) |
 | `devs`                      | Chosen devices (ID and name per selector)                         |

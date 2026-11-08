@@ -1,3 +1,5 @@
+Current as of v11 (2026-11-08): octave tiers, channel sliders, reset cues, Jump all, background operation (see "Session changes (v11)" at the end; it supersedes the additive octave selection and the Mode, Mute all-track reset described above).
+
 # Twin Pad Sequencer v10: current context
 
 Current as of v10 (2026-11-07, later session): musical tempo divisions, Div−/Div+ buttons, Mode then Len−/Len+, 1.5 s BPM hold (see "Session changes (v10, part 2)" at the end; it supersedes the integer tempo divider `div` and the old Len buttons described above).
@@ -253,3 +255,30 @@ Version stays v10. Mode, then BPM−/+ (Pad A top row 5/6, labelled **Opt**, tit
 
 ### v10 (part 4): tempo divisions up to two whole notes
 `DV` now has 20 entries (u in twelfths of a 16th): 32T 4, 32 6, 16T 8, 32D 9, 16 12, 8T 16, 16D 18, 8 24, 4T 32, 8D 36, 4 48, 2T 64, 4D 72, 2 96, *1T 128, 2D 144, *1 192, *2T 256, *1D 288, *2 384. Whole notes and above are labelled with a leading `*` (`*1` = whole note, `*2` = two whole notes; plain `2` = half note); no dotted two-whole-note value. `FNT` has a small `*`. Default index stays 4 (16th). Saved sessions and patterns now store `du` (the `u` value) so the list can change; `dvLoad` also reads the earlier `dv` index (old 12-value list, `OLDU`) and the original `div` 1–16. Selection and dropdown use `DV.length`. Manual, index and help updated. Syntax checked only.
+
+
+## Session changes (v11, 2026-11-08)
+Version bumped to v11 (app title and heading, manual, `index.html` with a v11 release note). All four files were updated. Syntax checked only.
+
+### v11 part 1: octave tiers, channel sliders, reset cues, Jump all
+Python edits with unique anchors, `new Function()` syntax check only. Untested in a browser or on hardware. Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual updated).
+- **Octave tiers:** sounding shift = `no` (note) + `loct` (lane) + `oct` (track) + `S.oa` (All, global, saved in the pattern group as `oa`, not applied to Drums). `selApply` now SETS the value (absolute, no accumulation; 0 resets). `pitch` adds `S.oa` for melodic tracks. Marking: note `no`≠0 magenta (LED, and class `oo` on screen), lane `loct`≠0 magenta (existing), track button violet [100,60,127] when `oct`≠0. Default track octaves are now 0 (were +1 / −1 for tracks 2 / 3) so no track starts marked. Key mode keyboards ignore `S.oa`.
+- **Channel sliders:** in the options view (`S.tdm`) grid rows 5–8 of both pads are per-track channel sliders (`pressPad`: `tracks[7-r].ch=step`, `allOff` first; `chCol`, LED and screen show the number). `PEX` exempts these rows from LED brightness dimming.
+- **Reset cues:** Mode, Mute (`rstCue(false)`) cues the selected track only (`rc[S.sel]`). Mode, Extend (`S.rx`, Extend flashes red, label All), Mute (`rstCue(true)`) sets `rxa` = selected track; when that track loops (`tc%len===0`) `trkEvt` sets `rf` for all tracks and each resets at its next event. `play` clears both. Extend in Mode no longer leaves Mode.
+- **Jump all:** with the selected track's Jump on and neither Mode nor mute mode, Extend toggles `S.ja` (red when active, label All); `jumpTo` pushes holds onto all tracks. Cleared when Jump is switched off. Note extend is not available while Jump is on.
+
+### v11 part 2: background operation
+Scheduler timer moved to a Web Worker (`startTimer`/`stopTimer`, Blob worker, 25 ms; falls back to `setInterval`). `tick` uses a 500 ms lookahead while `document.hidden` (120 ms otherwise) and calls `pump()` (playhead display queue + Launchpad LEDs, no DOM `draw`) because requestAnimationFrame pauses in hidden tabs; `loop` also uses `pump`. `visibilitychange` re-renders. External clock needs no change (MIDI events). Untested: Blob workers from `file://`, long background runs, iOS/MIDIWeb. The `blur` handler still clears Jump holds and Key mode notes. Other `setInterval` timers (flash blink, stopped-state drum repeat, BPM hold) remain throttled when hidden.
+
+### v11 part 3: LEDs in the background
+The worker is now created once at load (`initWorker`) and sends a 25 ms tick and a 350 ms blink. Tick: `tick` (scheduler) when playing without external clock, `pump` when playing on external clock; `tick` always calls `pump` (the playhead display queue and LEDs no longer depend on requestAnimationFrame or `document.hidden`). Blink: `blink()` (was a main-thread `setInterval`; flashing now runs at full speed in the background, `draw` skipped while hidden). Without a worker both fall back to `setInterval`. Untested on hardware.
+
+### v11 part 4: clear mode on Mode hold
+Hold Mode (Pad A right column bottom, hardware or on screen) for 2 s: `modeHoldStart` (called from `ctrl1`, where Mode toggles as usual) starts a 2 s timeout that calls `cmBtn` (not in Key mode); `ctrlUp` (any release, blur) cancels it via `modeHoldStop`. On-screen right-column buttons now call `ctrlUp` on pointerup/cancel/leave. The on-screen CLR button and its handlers were removed (RND stays). Clear mode (`S.cm`, one-shot): Mute, T1–T4, all lane buttons, Extend and the bottom row of the grid flash red (`RED()`); a head block in `ctrl1`: Mute cancels, Extend = `clearAll` (replaces Play), targets act as before, any other button cancels and then does its normal job. Play no longer clears everything. Extend is labelled All in clear mode. Manual, index and help updated. Untested on hardware: release detection for the Mode button on each Launchpad model.
+
+### v11 part 5: clear mode moved to Mode, then Oct−
+The Mode hold (part 4) did not work and was removed (`modeHoldStart/Stop`, hold wiring). Clear mode is now Mode, then Pad B top row 1 (Oct−; `ctrl1`: `k===5&&S.dm` after the Pad A 5/6 remap calls `cmBtn`). Label CLR and title in `topLbl`/`topTtl`, and the button flashes as a Mode second function. Oct+ with Mode still starts an octave selection. Everything else from part 4 (red flashing targets, Mute cancels, Extend = all, any other button cancels) is unchanged. Not available in Key mode (Oct± change the track octave there).
+
+### v11 part 6: CLR flashing, RESET button
+- Clear mode: the flashing red button is now Oct− (Pad B top row 1, `topCol` RED test `S.cm&&((i===1&&k===1)||k===8)`), not Mute. Mute has no special role: it is an ordinary "other button" (cancels clear mode, then toggles mute mode). Oct− pressed again in clear mode (`ctrl1` head, `n===91&&i===1`) leaves it. Label CLR also while `S.cm`.
+- RESET button (`#reset`, bottom right below the footer): after `confirm()`, sets `RS=true` (blocks `persist`), clears the pending save, removes the `twin-pad-sequencer-v1` localStorage key, stops playback and notes, then `location.reload()`, so the app starts as on a first load (no autosave, not connected). Pads leave programmer mode via `beforeunload`. Syntax checked only.
