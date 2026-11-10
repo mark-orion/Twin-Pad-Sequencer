@@ -1,4 +1,4 @@
-# Twin Pad Sequencer v11: Manual
+# Twin Pad Sequencer v12: Manual
 
 Twin Pad Sequencer is a step sequencer that runs in your web browser and can be controlled via the web interface or up to two Novation Launchpads. It sends MIDI notes to a synthesizer or DAW. This manual first explains how to use it, then ends with a detailed reference.
 
@@ -76,7 +76,7 @@ From top to bottom:
 3.  **Top bar (stays visible while scrolling):**
     - **BPM** tempo field.
     - **External clock** toggle button.
-    - **Length** of the sequence in steps.
+    - **Length** of the selected track's sequence in steps.
     - **Save All**, **Save MIDI**, **Save Ptn** and **Load** buttons.
 4.  **Settings row** for the selected track: **Scale**, **Root**, **Octave**, **Tempo ÷**, **Instrument output**, **Channel**, then **RND** (randomize).
 5.  **The two pads.** Each pad on screen copies a Launchpad:
@@ -86,7 +86,7 @@ From top to bottom:
 
     Buttons show the same functions and the same LED colours as the hardware, and you click or tap them like the hardware buttons.
 6.  **Hardware controls:** a collapsible help section at the bottom.
-7.  **RESET** (bottom right corner): after a confirmation it clears everything (patterns, MIDI and all other settings) and deletes the autosaved data, so the app starts as on its first load. Save your work first if you want to keep it.
+7.  **RESET** (bottom right of the **Hardware controls** section): clears everything (patterns, MIDI and all other settings) **immediately, without a confirmation**, and deletes the autosaved data, so the app starts as on its first load. Save your work first if you want to keep it.
 
 On a phone in portrait, the two pads are stacked. On a tablet or desktop they sit side by side. On a phone in landscape both pads fit next to each other under the top bar.
 
@@ -139,7 +139,7 @@ Octave values are absolute (see above). Elements with a non-zero value are marke
 
 ### Sequence length
 
-- Use **Length** (1–16), or press **Mode** and then Pad A top row buttons 3 and 4 (Len−/Len+, shorter and longer; Mode stays on). Without Mode these buttons are Div−/Div+.
+- The length is set **per track** (1–16). Use the **Length** field (it shows the selected track's length), or press **Mode** and then Pad A top row buttons 3 and 4 (**Len−/Len+**; without Mode these buttons are Div−/Div+). Each press changes the value by 1 and shows it as two digits on Pad B for 2 seconds. Then press a track button T1–T4 to apply it to that track, or **Extend** (All) to apply it to all four tracks. Len−/Len+ stay active (they, the track buttons and Extend flash) until you press any other button, so you can apply the value to several tracks one after another.
 - Steps beyond the length are dark on the pads and faded on screen. Their notes are kept and come back when you lengthen the sequence again.
 - Changing the length while playing never restarts the sequence.
 
@@ -225,9 +225,9 @@ How the modes behave:
 - **Random** and **random walk** move **one playhead for the whole track**. All lanes play that step if it lies inside their loop range, so the range works as a filter. Random walk moves one step up or down at random and wraps around.
 - A lane with its own random mode moves its own playhead.
 
-**Jump:** press **Mode**, then **Gate** to switch Jump on (or off again) for the selected track. While Jump is on, the bottom row of the note grid glows cyan and the track’s current stepping mode keeps running. **Hold** a bottom-row pad to hold the track’s playhead on that step: the step is played again on every tick for as long as the pad is down. When you let go, the track carries on in its stepping mode from that step. If you hold several pads, the last one pressed counts. A lane whose loop range does not contain that step ignores the hold and runs on as before. While Jump is on, the bottom row no longer toggles notes (switch Jump off to edit them). Jump needs the sequencer to be playing, and each track has its own Jump switch. With Jump on, **Extend** (labelled All, red while active) toggles **Jump all**: a held bottom-row pad then holds the playhead of all four tracks on that step. Jump all ends when Jump is switched off.
+**Jump:** press **Mode**, then **Gate** to switch Jump on (or off again) for the selected track. While Jump is on, the bottom row of the note grid glows cyan and the track’s current stepping mode keeps running. **Hold** a bottom-row pad to hold the track’s playhead on that step: the step is played again on every tick for as long as the pad is down. When you let go, the track carries on in its stepping mode from that step. If you hold several pads, the last one pressed counts. A lane whose loop range does not contain that step ignores the hold and runs on as before. While Jump is on, the bottom row no longer toggles notes (switch Jump off to edit them). Jump needs the sequencer to be playing, and each track has its own Jump switch. With Jump on, **Extend** (labelled All, red while active) toggles **Jump all**, also while Mode is still on: a held bottom-row pad then holds the playhead of all four tracks on that step until it is released. Jump all ends when Jump is switched off.
 
-**Playhead reset:** press **Mode**, then **Mute** (labelled Reset) to cue a reset for the **selected track**. To cue **all tracks**, press **Mode**, then **Extend** (labelled All, flashes red), then **Mute**: when the selected track next loops, every lane of every track jumps to step 1. Press again to cancel. When a track next loops to step 1 (every Length steps of its own speed), every lane jumps to step 1, including lanes with their own loop range. The track then carries on in its stepping mode; a lane whose loop range does not start at step 1 runs freely along the track until it reaches its range, and from then on loops within that range again. In the random modes the shared playhead restarts at step 1 and lanes outside their range stay silent as usual. The cue is not saved; while it is pending, Mute flashes white when Mode is on.
+**Playhead reset:** press **Mode**, then **Mute** (labelled Reset) to cue a reset for the **selected track**. To cue **all tracks** (Jump must be off for the selected track; with Jump on Extend is Jump all), press **Mode**, then **Extend** (labelled All, flashes red), then **Mute**: when the selected track next loops, every lane of every track jumps to step 1. Press again to cancel. When a track next loops to step 1 (every Length steps of its own speed), every lane jumps to step 1, including lanes with their own loop range. The track then carries on in its stepping mode; a lane whose loop range does not start at step 1 runs freely along the track until it reaches its range, and from then on loops within that range again. In the random modes the shared playhead restarts at step 1 and lanes outside their range stay silent as usual. The cue is not saved; while it is pending, Mute flashes white when Mode is on.
 
 ### Patterns
 
@@ -332,7 +332,7 @@ While an **Oct, Scale or Root selection** is active (see [Selection buttons](#se
 - **Automatic:** all settings, tracks and sequences are saved in the browser a moment after every change and restored when the page opens. If you were connected to MIDI, it reconnects.
 - **To a file:** **Save All** downloads MIDI settings and patterns (`twin-pad-all.json`), **Save MIDI** only the MIDI settings (`twin-pad-midi.json`: devices, Launchpad models, clock input, external clock, the drum map, LED brightness, and each track's output and channel) and **Save Ptn** only the patterns (`twin-pad-patterns.json`: everything else, including tempo, length and root). One **Load** button loads any of these files, and only the settings found in the file are changed. Use this for backups and for moving between computers, because the automatic copy belongs to one browser and one way of opening the page.
 - **Not saved:** whether it is playing, the current mode or view, and the whole-app mute.
-- **Reset:** the **RESET** button (bottom right of the page) deletes the autosaved data and all settings after a confirmation.
+- **Reset:** the **RESET** button (bottom right of the Hardware controls section) deletes the autosaved data and all settings at once, without a confirmation.
 
 ### External clock and start / stop
 
@@ -368,7 +368,7 @@ While an **Oct, Scale or Root selection** is active (see [Selection buttons](#se
 | Setting              | Default                                         | Range                   |
 |----------------------|-------------------------------------------------|-------------------------|
 | Tempo                | 120 BPM                                         | 30–300                  |
-| Sequence length      | 16 steps                                        | 1–16                    |
+| Sequence length (per track) | 16 steps                                 | 1–16                    |
 | Velocity per step    | 100                                             | 1–127                   |
 | Gate length per step | 50%                                             | 1–100%                  |
 | Probability per step | 100%                                            | 0–100%                  |
@@ -392,12 +392,12 @@ Numbers count from the left (top rows) or from the top (right columns). Labels i
 |---|---|---|
 | 1 | Play / Stop | Start or stop. In clear mode: cancels it. |
 | 2 | Mute | Toggle mute mode. After Mode (labelled Reset): cue a playhead reset. |
-| 3 | Div− (Len− after Mode) | Select the next faster tempo division (shown on both pads); then press a track button or Extend (all tracks). After Mode: shorten the sequence by one step. |
-| 4 | Div+ (Len+ after Mode) | Select the next slower tempo division; then press a track button or Extend (all tracks). After Mode: lengthen the sequence by one step. |
+| 3 | Div− (Len− after Mode) | Select the next faster tempo division (shown on both pads); then press a track button or Extend (all tracks). After Mode (Len−): sequence length −1, shown on Pad B; then press a track button or Extend (all tracks). Stays active until another button is pressed. |
+| 4 | Div+ (Len+ after Mode) | Select the next slower tempo division; then press a track button or Extend (all tracks). After Mode (Len+): sequence length +1, shown on Pad B; then press a track button or Extend (all tracks). Stays active until another button is pressed. |
 | 5 | BPM− | Tempo −1 (hold over 1.5 s: −10 every 0.5 s); shows the tempo. After Mode (labelled Opt): options view (LED brightness). |
 | 6 | BPM+ | Tempo +1 (hold over 1.5 s: +10 every 0.5 s); shows the tempo. After Mode (labelled Opt): options view (LED brightness). |
 | 7 | Swap | Swap the two pads |
-| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all. |
+| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode with Jump off (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all (also after Mode). During a Len selection: apply to all tracks. |
 
 **Pad B top row**
 
@@ -410,7 +410,7 @@ Numbers count from the left (top rows) or from the top (right columns). Labels i
 | 5 | Root− (♭ on Chromatic) | Select root −1 semitone; then press a track button or Extend (all). On a Chromatic track: toggle flat mode (after Mode: root selection). |
 | 6 | Root+ (♯ on Chromatic) | Select root +1 semitone; then press a track button or Extend (all). On a Chromatic track: toggle sharp mode (after Mode: root selection). |
 | 7 | Swap | Swap the two pads |
-| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all. |
+| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode with Jump off (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all (also after Mode). During a Len selection: apply to all tracks. |
 
 **Pad A right column**
 
@@ -596,7 +596,7 @@ When the page closes, or when you change a pad's model, the pad is returned to i
 
 | Field                       | Content                                                           |
 |-----------------------------|-------------------------------------------------------------------|
-| `bpm`, `root`, `sel`, `len`, `oa` | Tempo, root note (0–11), selected track (0–3), sequence length, global octave shift (−3 to +3)    |
+| `bpm`, `root`, `sel`, `oa` | Tempo, root note (0–11), selected track (0–3), global octave shift (−3 to +3)    |
 | `sync`, `swap`              | External clock and swap state                                     |
 | `models`                    | Launchpad models of pad A and B (`mk3`, `x`, `pro`, `xy`, `drum`) |
 | `devs`                      | Chosen devices (ID and name per selector)                         |
@@ -604,6 +604,6 @@ When the page closes, or when you change a pad's model, the pad is returned to i
 | `dmap` | Custom drum map (`name` and `lanes` with `lane`, `label`, `note`, `channel`), or null for the default |
 | `tracks[]`                  | Four tracks, each with the fields below                           |
 
-Track fields: `scale`, `oct`, `ch`, `mute`, `so` (instrument output: ID and name, or null if never chosen), `du` (tempo division as the step length in twelfths of a 16th note: 4 = 32T … 12 = 16th … 384 = two whole notes; files with the earlier `dv` index or `div` 1–16 still load), `rs` (root shift of this track, 0–11 semitones, added to the global root), `jmp` (Jump on or off), `pi` (active pattern 0–7), `pats` (8 stored patterns, null = empty), `km` (Key mode on or off), `kv` (Key mode velocity, 1–127), `lvel`, `lgate`, `lprob` (per-lane values, lane × 16 + step) with `fvel`, `fgate`, `fprob` (8 flags: the lane uses its own values), `no` (128 per-note octave offsets, lane × 16 + step), `loct` (8 per-lane octave offsets), `dir` (stepping mode 0–4), `ldir` (8 lane overrides, −1 = follow the track), `g` (16 step bitmasks, one bit per lane), `acc` (128 accidentals per note, −1 flat, 0 natural, +1 sharp, lane × 16 + step), `ln` (128 held-note lengths, lane × 16 + step), `vel`, `gate` and `prob` (16 values each), `sm` (16 step mutes), `lm` (8 lane mutes), `lo` and `hi` (8 lane loop starts and ends).
+Track fields: `len` (sequence length 1–16 of this track; older files with one global `len` give every track that length), `scale`, `oct`, `ch`, `mute`, `so` (instrument output: ID and name, or null if never chosen), `du` (tempo division as the step length in twelfths of a 16th note: 4 = 32T … 12 = 16th … 384 = two whole notes; files with the earlier `dv` index or `div` 1–16 still load), `rs` (root shift of this track, 0–11 semitones, added to the global root), `jmp` (Jump on or off), `pi` (active pattern 0–7), `pats` (8 stored patterns, null = empty), `km` (Key mode on or off), `kv` (Key mode velocity, 1–127), `lvel`, `lgate`, `lprob` (per-lane values, lane × 16 + step) with `fvel`, `fgate`, `fprob` (8 flags: the lane uses its own values), `no` (128 per-note octave offsets, lane × 16 + step), `loct` (8 per-lane octave offsets), `dir` (stepping mode 0–4), `ldir` (8 lane overrides, −1 = follow the track), `g` (16 step bitmasks, one bit per lane), `acc` (128 accidentals per note, −1 flat, 0 natural, +1 sharp, lane × 16 + step), `ln` (128 held-note lengths, lane × 16 + step), `vel`, `gate` and `prob` (16 values each), `sm` (16 step mutes), `lm` (8 lane mutes), `lo` and `hi` (8 lane loop starts and ends).
 
 Files from older versions load with defaults for anything that did not exist yet.

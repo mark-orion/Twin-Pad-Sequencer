@@ -1,4 +1,4 @@
-Current as of v11 (2026-11-08): octave tiers, channel sliders, reset cues, Jump all, background operation (see "Session changes (v11)" at the end; it supersedes the additive octave selection and the Mode, Mute all-track reset described above).
+Current as of v12 (2026-11-09; the v11 part 7 changes became v12):  per-track sequence length with Len selection, Jump all in Mode, RESET without confirmation (see "v11 part 7" at the end; it supersedes the global `S.len`). Earlier: v11 (2026-11-08): octave tiers, channel sliders, reset cues, Jump all, background operation (see "Session changes (v11)" at the end; it supersedes the additive octave selection and the Mode, Mute all-track reset described above).
 
 # Twin Pad Sequencer v10: current context
 
@@ -282,3 +282,13 @@ The Mode hold (part 4) did not work and was removed (`modeHoldStart/Stop`, hold 
 ### v11 part 6: CLR flashing, RESET button
 - Clear mode: the flashing red button is now Oct− (Pad B top row 1, `topCol` RED test `S.cm&&((i===1&&k===1)||k===8)`), not Mute. Mute has no special role: it is an ordinary "other button" (cancels clear mode, then toggles mute mode). Oct− pressed again in clear mode (`ctrl1` head, `n===91&&i===1`) leaves it. Label CLR also while `S.cm`.
 - RESET button (`#reset`, bottom right below the footer): after `confirm()`, sets `RS=true` (blocks `persist`), clears the pending save, removes the `twin-pad-sequencer-v1` localStorage key, stops playback and notes, then `location.reload()`, so the app starts as on a first load (no autosave, not connected). Pads leave programmer mode via `beforeunload`. Syntax checked only.
+
+### v11 part 7 (2026-11-09): Jump all in Mode, per-track length, RESET
+Python edits with unique anchors, `new Function()` syntax check only. Untested in a browser or on hardware. Files: `twin-pad-sequencer.html`, `manual.md`, `context.md` (`index.html` manual NOT updated yet).
+- **Jump all fix:** Extend in Mode used to arm the all-tracks reset (`S.rx`), so Jump all could not be switched on after Mode, Gate. Now `ctrl1` k===8: Mode with Jump off = reset-all arm (unchanged); mute mode = whole-app mute; Jump on (Mode or not) = toggle `S.ja`. Switching Jump toggles clears `S.rx`. Extend is red while `S.ja` (also in Mode); title/label follow. `jumpTo` pushes a hold onto every track when `S.ja` (each track checks its own length). Holds apply at each track's next event (up to the lookahead later). Reset-all needs Jump off on the selected track.
+- **RESET:** no `confirm()`; the `#reset` button moved into the Hardware controls `<details>`, bottom right (`.rs`).
+- **Per-track length:** `S.len` is gone; each track has `len` (1–16, default 16, not part of patterns, saved per track in the pattern group; an old global `len` in a file sets every track). `eh`, `trackStep`, `freeNext`, `trkEvt` (cue and loop tests use `tr.len`), master-slider averages, `led`/`draw` dimming and Jump flash, `jumpTo` all use the track's length. The `#len` field shows and edits the selected track.
+- **Len selection:** `S.sv={k:'len',v}` (starts at the selected track's `len`, 1–16, step 1). Pad A top row 3/4 are Len−/Len+ with Mode on (`ctrl1`: `selStart('len',…)`, Mode ends like for other selections) and while a Len selection is active. Shown as two digits on Pad B (`glSet`, 2 s). T1–T4 = that track, Extend = all tracks (`selApply`). The selection stays active after applying (`glSet` again) until any non-destination button or pad press (`selEnd`). Len−/Len+ flash red, track buttons and Extend flash as second functions. `setLen` removed.
+
+## Session changes (v12, 2026-11-09)
+Version bumped to v12 (app title and heading, manual, `index.html` with a v12 release note). The functional changes are those listed under "v11 part 7" above (Jump all in Mode, RESET without confirmation and moved into Hardware controls, per-track sequence length with Len selection). `index.html` manual sections were updated to match. Syntax checked only.
