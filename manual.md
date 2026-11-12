@@ -1,4 +1,4 @@
-# Twin Pad Sequencer v12: Manual
+# Twin Pad Sequencer v13: Manual
 
 Twin Pad Sequencer is a step sequencer that runs in your web browser and can be controlled via the web interface or up to two Novation Launchpads. It sends MIDI notes to a synthesizer or DAW. This manual first explains how to use it, then ends with a detailed reference.
 
@@ -34,8 +34,8 @@ Twin Pad Sequencer is a step sequencer that runs in your web browser and can be 
 - **Selected track:** the pads and the settings row always edit the *selected track*. The selected track's button is the brightest in the Pad A right column.
 - **Lane:** one row of notes. The bottom row is the lowest note.
 - **Step:** one 16th note. The default length is 16 steps, one bar.
-- **Modes:** several functions (mute, clear, extend note, velocity, gate, probability, stepping mode, loop setting) work as *modes*. 
-- **Toggle buttons:** Mute, Mode, Extend, ♭, ♯, Vel, Gate and Prob (the views) change state only when you press them: they stay on until you press the same button again, however many targets you use. An active toggle button **flashes red**. Buttons that gain a second function while it is on keep their colour and **flash** instead (Mode: T1–T4, Mute, Prob, Gate, Vel, BPM±, Scale±, Root± and the lane buttons; Mute: Extend, T1–T4 and the lane buttons; Oct, Scale, Root and Div selection: T1–T4, Extend and (Oct only) the lane buttons; ♭/♯: the lane buttons). The note grid never flashes. Pressing another toggle button switches the active one off.
+- **Modes:** several functions (mute, clear, shuffle, extend note, velocity, gate, probability, stepping mode, loop setting) work as *modes*. 
+- **Toggle buttons:** Mute, Mode, Extend, ♭, ♯, Vel, Gate and Prob (the views) change state only when you press them: they stay on until you press the same button again, however many targets you use. An active function button (Mute, Mode, Extend, ♭, ♯, Vel, Gate, Prob, Oct, Scale, Root, Div, Len, CLR, SHF, Opt, Pat) **flashes red**. The buttons you can press next (targets: T1–T4, lane buttons, Extend (All) and the bottom row of the note grid) **flash in the colour of the active function's button**. While Mode is on, the buttons that gain a second function flash in their own colour (T1–T4, Mute, Prob, Gate, Vel, BPM±, Oct±, Scale±, Root±, Extend and the lane buttons). Each function on the top rows has its own bright colour, and the two buttons of a pair (Oct−/Oct+, Scale◀/▶, ...) share it (see [9.8](#98-led-colours)). Pressing another toggle button switches the active one off.
 
 ------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ From top to bottom:
     - **External clock** toggle button.
     - **Length** of the selected track's sequence in steps.
     - **Save All**, **Save MIDI**, **Save Ptn** and **Load** buttons.
-4.  **Settings row** for the selected track: **Scale**, **Root**, **Octave**, **Tempo ÷**, **Instrument output**, **Channel**, then **RND** (randomize).
+4.  **Settings row** for the selected track: **Scale**, **Root**, **Octave**, **Tempo ÷**, **Instrument output**, **Channel**.
 5.  **The two pads.** Each pad on screen copies a Launchpad:
     - a **top row** of 8 buttons with a small cell for the **logo** at its right,
     - the **8×8 note grid**,
@@ -277,11 +277,11 @@ Press **Mute** (Pad A top row, second button). It flashes red and stays on until
 | A **bottom-row pad** (either pad)             | Mutes or unmutes all notes in that step on the selected track |
 | The **Extend** button | Mutes or unmutes the whole app (the sequence keeps running)   |
 
-Muted things show red, active ones green. Muted notes are dimmed on the grid.
+Muted things show solid red; the targets you can press flash yellow. Muted notes are dimmed on the grid.
 
 ### Clear mode
 
-Press **Mode**, then **Oct−** (Pad B top row, button 1; labelled CLR while Mode is on) to switch clear mode on. Oct−, the track buttons, the lane buttons, Extend and the bottom row of the note grid flash red. Press one target and the mode ends. Press **Oct−** again to cancel clear mode; any other button cancels it and then does its normal job:
+Press **Mode**, then **Oct−** (Pad B top row, button 1; labelled CLR while Mode is on) to switch clear mode on. Oct− flashes red; the track buttons, the lane buttons, Extend and the bottom row of the note grid flash purple, the colour of CLR. Press one target and the mode ends. Press **Oct−** again to cancel clear mode; any other button cancels it and then does its normal job:
 
 | Target                                 | Effect                                             |
 |----------------------------------------|----------------------------------------------------|
@@ -304,9 +304,24 @@ Key mode turns both pads into the same keyboards, so you can play the selected t
 - The **top row of the grid** shows where the track's silent sequencer is: the playhead moves along it as a **red LED** (steps 1–8 on Pad A, 9–16 on Pad B) while the sequencer is playing.
 - Notes go to the track's channel and instrument output. **Mute** works as usual: press Mute, then T1–T4 to mute or unmute tracks (a muted track's keyboard is silent too). **Oct−** and **Oct+** change the track octave directly. **Scale** and **Root** buttons (Pad B top row) and the on-screen dropdowns work as usual. Notes stop when the track, scale, root, octave, channel or output changes, and when you leave Key mode. Other buttons are dark and do nothing.
 
-### Randomize
+### Shuffle
 
-**RND** replaces the selected track with a random pattern (fewer notes on melodic tracks, a little more on drums).
+Shuffle randomly moves around the notes that already exist. It never adds or removes notes.
+
+Press **Mode**, then **Oct+** (Pad B top row, button 2; labelled SHF while Mode is on) to switch shuffle on. While Mode is on, Oct− (CLR, purple) and Oct+ (SHF, green) have different colours because they start different functions. Oct+ flashes red; the targets flash green, the colour of SHF. Press a target to shuffle it once. Shuffle stays on, so pressing a target again shuffles again:
+
+| Target | Effect |
+|---|---|
+| A **bottom-row pad** (either pad) | Shuffles that step of the selected track: its notes get new, different lanes (pitches) |
+| A **lane** button (Pad B right column) | Shuffles the notes of that lane of the selected track within the lane's active region |
+| A **track** button T1–T4 | Shuffles the step order of that track |
+| The **Extend** button (labelled All) | Shuffles the step order of all four tracks |
+
+- **Step:** every note of the step moves to a randomly chosen lane, and no two notes share a lane. Only lanes whose active region contains the step are used, and a lane covered by a held note from an earlier step is skipped. Steps beyond the sequence length are ignored.
+- **Lane:** the active region is the lane's loop range within the sequence length. The notes move to random steps inside it without overlapping. Notes outside the region stay where they are.
+- **Track and All:** the step order changes. Each step's whole column of notes moves to another step of the track (a random permutation of steps 1 to the track length), so notes keep their lane and no new chords or extra polyphony appear. Lane loop ranges are not considered: a note moved outside its lane's loop range is kept but not played, because the lane still loops through its configured range, and a note moved into the range is played. Held notes keep their length, shortened only if they would run past the sequence length or into another note of the lane.
+- Held notes keep their length (shortened only if there is no room), and sharps, flats and per-note octaves travel with the note. Velocity, gate, probability and step mutes stay with the step.
+- Press **Oct+** again to leave. **Play** and **Swap** work normally and keep shuffle on; any other button leaves shuffle and then does its normal job. Other pad presses are ignored. Shuffle is not available in Key mode, and there is no undo (copy the pattern first if you want to keep it).
 
 ### Swap pads
 
@@ -397,20 +412,20 @@ Numbers count from the left (top rows) or from the top (right columns). Labels i
 | 5 | BPM− | Tempo −1 (hold over 1.5 s: −10 every 0.5 s); shows the tempo. After Mode (labelled Opt): options view (LED brightness). |
 | 6 | BPM+ | Tempo +1 (hold over 1.5 s: +10 every 0.5 s); shows the tempo. After Mode (labelled Opt): options view (LED brightness). |
 | 7 | Swap | Swap the two pads |
-| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode with Jump off (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all (also after Mode). During a Len selection: apply to all tracks. |
+| 8 | Extend | Extend a note. In mute mode: whole-app mute. In shuffle mode: shuffle all tracks. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode with Jump off (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all (also after Mode). During a Len selection: apply to all tracks. |
 
 **Pad B top row**
 
 | # | Button | Function |
 |---|---|---|
 | 1 | Oct− | Octave selection −1 (shown on Pad B); then press a note, empty pad (step), lane, track or Extend (all). After Mode (labelled CLR): clear mode. |
-| 2 | Oct+ | Octave selection +1; then choose the destination as for Oct− |
+| 2 | Oct+ | Octave selection +1; then choose the destination as for Oct−. After Mode (labelled SHF): shuffle mode. |
 | 3 | Scale◀ | Select the previous scale; then press a track button or Extend (all). After Mode: pattern view. |
 | 4 | Scale▶ | Select the next scale; then press a track button or Extend (all). After Mode: pattern view. |
 | 5 | Root− (♭ on Chromatic) | Select root −1 semitone; then press a track button or Extend (all). On a Chromatic track: toggle flat mode (after Mode: root selection). |
 | 6 | Root+ (♯ on Chromatic) | Select root +1 semitone; then press a track button or Extend (all). On a Chromatic track: toggle sharp mode (after Mode: root selection). |
 | 7 | Swap | Swap the two pads |
-| 8 | Extend | Extend a note. In mute mode: whole-app mute. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode with Jump off (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all (also after Mode). During a Len selection: apply to all tracks. |
+| 8 | Extend | Extend a note. In mute mode: whole-app mute. In shuffle mode: shuffle all tracks. During an Oct, Scale, Root or Div selection: apply to all tracks. After Mode with Jump off (All): arm a reset of all tracks, then press Mute. With Jump on: toggle Jump all (also after Mode). During a Len selection: apply to all tracks. |
 
 **Pad A right column**
 
@@ -425,7 +440,7 @@ Numbers count from the left (top rows) or from the top (right columns). Labels i
 | 7 | Vel | Open or close the velocity view. Idle in Key mode. | Cycle keyboard / drum pads / sequencer |
 | 8 | Mode | Start stepping mode selection | Cancel |
 
-In mute mode the track buttons mute tracks, in clear mode they clear tracks, and during an Oct, Scale or Root selection they are the track destinations.
+In mute mode the track buttons mute tracks, in clear mode they clear tracks, in shuffle mode they shuffle tracks, and during an Oct, Scale or Root selection they are the track destinations.
 
 **Pad B right column:** one button per lane, lane 8 at the top and lane 1 at the bottom. On screen each button is labelled with the note name of its lane for the selected track (for example C, Eb, F#, Bb, without the octave), and the labels follow the scale, root and octave. On the Drums scale they show the pitch class of the drum note, or the two-letter label when a custom drum map is loaded.
 
@@ -436,11 +451,12 @@ In mute mode the track buttons mute tracks, in clear mode they clear tracks, and
 | Mute mode | Mute or unmute the lane |
 | Stepping selection | Select the lane for its own stepping mode |
 | Clear mode | Clear the lane |
+| Shuffle mode | Shuffle the notes of the lane |
 | Velocity, gate or probability view | Master slider: set all steps to the button's level |
 | Sharp or flat mode (Chromatic) | Sharpen or flatten every note of the lane |
 | Key mode | Velocity slider for the keyboard: same 8 levels as the master velocity slider (16 to 127), default 100 |
 
-**Note grid (both pads):** normally toggles notes. In the velocity, gate and probability views it sets the step's value. With Jump on, a held bottom-row pad holds the track on that step. In the options view the bottom row of Pad A is the LED brightness slider (the rest is dark). In mute and clear mode the bottom row selects a step, and the other rows are ignored in clear mode. In Key mode both grids are keyboards (see [Key mode](#key-mode)).
+**Note grid (both pads):** normally toggles notes. In the velocity, gate and probability views it sets the step's value. With Jump on, a held bottom-row pad holds the track on that step. In the options view the bottom row of Pad A is the LED brightness slider (the rest is dark). In mute, clear and shuffle mode the bottom row selects a step, and the other rows are ignored in clear and shuffle mode. In Key mode both grids are keyboards (see [Key mode](#key-mode)).
 
 ### 9.3 On-screen controls
 
@@ -461,7 +477,6 @@ In mute mode the track buttons mute tracks, in clear mode they clear tracks, and
 | Instrument output                                | MIDI output of the selected track                                                                   |
 | Oct− / Oct+ | Select the octave change, then a note, step, lane, track or All |
 | Channel                                          | MIDI channel of the selected track                                                                  |
-| RND                                              | Randomize the selected track                                                                        |
 | On-screen top rows, logo cells and right columns | Same as the hardware                                                                                |
 | Velocity, gate and probability sliders           | Exact values, drawable across steps                                                                 |
 | Master slider (beside Pad B in the slider views) | Sets all steps of the selected track to one value                                                   |
@@ -542,10 +557,9 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 | Very dark blue | Inside a custom lane loop range |
 | Brighter blue | First and last step of a custom lane loop range |
 | Dark or faded | Beyond the sequence length |
-| Red, flashing (bottom row) | Clear-step targets (clear mode) |
+| Flashing in the function's colour (bottom row) | Step targets: purple in clear mode, green in shuffle mode, yellow in mute mode (muted steps are solid red) |
 | Cyan, flashing (bottom row) | Jump targets (Jump on) |
 | White and grey bar (bottom row of Pad A) | Options view: LED brightness slider, brightest pad at the value |
-| Red or green, flashing (bottom row) | Muted or active steps in mute mode |
 | Dim blue-grey, dark (Key mode) | White keys and black keys; the current octave in the track colour; root keys green; a sounding key white |
 | Red, top grid row (Key mode) | Playhead of the track's sequencer |
 
@@ -553,28 +567,29 @@ LED colours are the same on screen and on every Launchpad (reduced to the pad's 
 
 | Button | Colours |
 |---|---|
-| Play | Dim green (stopped), green (playing) |
-| Mute | Dim yellow, flashing red when mute mode is on |
-| Div−, Div+ (Pad A), Oct−, Oct+ (Pad B top row 1–2) | Blue. Oct−/Oct+ flash red while an octave selection is active; Oct− also flashes red in clear mode |
-| BPM−, BPM+ (Pad A top row 5–6) | Teal. Colours stay with the button positions, not the functions |
-| Scale◀, Scale▶ | Amber |
-| Root−, Root+ | Purple. On a Chromatic track: ♭ is dim blue (bright blue in flat mode), ♯ is dim orange (bright orange in sharp mode). |
-| Swap | Dim orange, bright when swapped |
-| Extend | Dim teal, flashing red when armed. Flashes in mute mode and during a selection (All); red when the whole app is muted; flashing red in clear mode |
-| BPM−, BPM+ (Pad A), Scale◀, Scale▶, Root−, Root+ (Pad B) | Keep their colour and flash while Mode is on |
+| Play | Green (playing), dim green (stopped) |
+| Mute | Yellow; flashes red while mute mode is on |
+| Div−, Div+ (Pad A top row 3–4; Len−, Len+ after Mode) | Azure blue; flash red while a Div or Len selection is active |
+| BPM−, BPM+ (Pad A top row 5–6; Opt after Mode) | Cyan; flash red while the options view is open |
+| Oct−, Oct+ (Pad B top row 1–2) | Indigo; flash red while an octave selection is active |
+| Scale◀, Scale▶ (Pad B top row 3–4; Pat after Mode) | Orange; flash red during a scale selection and in pattern view |
+| Root−, Root+ (Pad B top row 5–6) | Lime; flash red during a root selection. On a Chromatic track the same buttons are ♭ and ♯ (also lime); the one whose mode is on flashes red |
+| Oct−, Oct+ after Mode (CLR, SHF) | CLR purple, SHF spring green; the active one flashes red |
+| Swap | Dim white, bright white when swapped |
+| Extend | Pink; flashes red while armed (extend note, reset all, Jump all); solid red when the whole app is muted. As a target (All) it flashes in the colour of the active function |
 | Logo | Dim red (Pad A role), dim green (Pad B role) |
 
 **Right columns**
 
 | Button | Colours |
 |---|---|
-| T1–T4 | Track colour, bright when selected. Red for muted tracks in mute mode, flashing red in clear mode. |
-| Toggle buttons | Mute, Mode, Extend, ♭, ♯, the active Oct, Scale or Root selection and the open Vel, Gate or Prob view flash red while active. Second-function buttons (T1–T4, Prob, Gate, Vel, lane buttons) keep their colour and flash. |
+| T1–T4 | Track colour, bright when selected. While a function with targets is active (mute, clear, shuffle, selections) they flash in that function's colour; muted tracks in mute mode are solid red. |
+| Toggle buttons | Mute, Mode, Extend, ♭, ♯, the active Oct, Scale, Root, Div or Len selection and the open Vel, Gate or Prob view flash red while active. Targets flash in the colour of the function's button; in Mode the second-function buttons flash in their own colour. |
 | Mode | Dim yellow-green, flashing red while Mode is on |
 | Prob | Dim green; flashing red when the view is open |
 | Gate | Dim blue; flashing red when the view is open |
 | Vel | Dim orange; flashing red when the view is open |
-| Pad B lanes | Dim blue; blue for a custom loop; white while setting a loop or for the lane chosen in Mode; green or red in mute mode (flashing); flashing red in clear mode |
+| Pad B lanes | Dim blue; blue for a custom loop; white while setting a loop or for the lane chosen in Mode. As targets (mute, clear, shuffle, octave selection) they flash in the active function's colour; muted lanes are solid red. |
 
 ### 9.9 Launchpad protocols
 
